@@ -1290,5 +1290,5 @@ radio.instance(FDB)
 
 load.destroy()
 tk.deiconify()
-exec(open('deacftpo.py').read())
+#exec(open('deacftpo.py').read())
 tk.mainloop()
