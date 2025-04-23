@@ -55,7 +55,6 @@ else:
              DELETE:'<KeyPress-Delete>',
              SELECT:'<Control-a>'}
 class ContextMenu():
-
     def __init__(self,images=True):
         if images:
             try:

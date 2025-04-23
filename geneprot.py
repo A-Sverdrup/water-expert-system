@@ -1,4 +1,3 @@
-#Developed by Sverdrup Antoniy Elias
 if __name__!='__main__':raise ImportError("This program is a standalone software and cannot be imported as module")
 try:
     from tkinter import Tk,Toplevel,Button,Checkbutton,Entry,Frame,Label,LabelFrame,Menu,PanedWindow,Scrollbar,BooleanVar,StringVar,IntVar
@@ -54,304 +53,7 @@ csv.register_dialect('|', delimiter='|')
 csv.register_dialect(' ', delimiter=' ')
 csv.register_dialect(',', delimiter=',')
 DB={}
-def number(value):
-    try:
-        try:number2=int(value)
-        except ValueError:number2=float(value)
-    except ValueError:number2=value
-    return number2
-class OtherError(Exception):
-    '''Custom error message for Downloader'''
-class TableButton(Button):
-    def __init__(self,master,name,number,commands,**kw):
-        Button.__init__(self,master=master,text=number,command=lambda:commands.get(commands['default'])(self.number),**kw)
-        self.name=name
-        self.number=number
-        self.menu = Menu(self,tearoff=0)
-        self.make_menu(commands)
-        self.make_menu2(commands)
-        self.bind('<Button-2>',self.open)
-        self.bind('<Button-3>',self.open)
-    def make_menu(self,commands):pass
-    def make_menu2(self,commands):
-        self.menu.add_separator()
-        self.menu.add_command(label='Insert %s before'%self.name,command=lambda:commands['insert'](self.number))
-        self.menu.add_command(label='Insert %s after'%self.name,command=lambda:commands['insert'](self.number+1))
-        self.menu.add_command(label='Delete '+self.name,command=lambda:commands['delete'](self.number))
-    def config(self,**kw):
-        if'number'in kw:self.number=kw['number'];del kw['number']
-        Button.config(self,**kw)
-    def open(self,event):
-        self.menu.tk_popup(self.winfo_rootx(),self.winfo_rooty())
-class TableColumnButton(TableButton):
-    def make_menu(self,commands):
-        menu2=Menu(self.menu,tearoff=0)
-        self.menu.add_command(label='Shrink/Expand',command=lambda:commands['shrink'](self.number))
-        self.menu.add_command(label='Rename',command=lambda:commands['rename'](self.number,askstring('Rename column','Rename column')))
-        self.menu.add_separator()
-        menu2.add_command(label='0 (False)',command=lambda:commands['fill0'](self.number))
-        menu2.add_command(label='1 (True)',command=lambda:commands['fill1'](self.number))
-        self.menu.add_cascade(label='Fill...',menu=menu2)
-        self.menu.add_command(label='Copy to...',command=lambda:commands['copy'](self.number))
-        self.menu.add_command(label='Clear',command=lambda:commands['clear'](self.number))
-        self.menu.add_separator()
-        self.menu.add_command(label='Insert %s before'%self.name,command=lambda:commands['insert'](self.number))
-        self.menu.add_command(label='Insert %s after'%self.name,command=lambda:commands['insert'](self.number+1))
-        self.menu.add_command(label='Insert 8 %ss after'%self.name,command=lambda:[commands['insert'](self.number+1)for i in range(8)])
-        self.menu.add_command(label='Delete '+self.name,command=lambda:commands['delete'](self.number))
-    def make_menu2(self,commands):None
-class TableRowButton(TableButton):
-    def make_menu(self,commands):
-        self.menu.add_command(label='Copy to...',command=lambda:commands['copy'](self.number))
-        self.menu.add_command(label='Clear',command=lambda:commands['clear'](self.number))
-        self.menu.add_separator()
-        self.menu.add_command(label='Set as header',command=lambda:commands['head'](self.number))
-class FastaTableButton(TableButton):
-    def make_menu(self,commands):
-        self.menu.add_command(label='Show coordinates',command=lambda:commands['show'](self.number))
-        if self.name=='row':self.menu.add_command(label='Rename',command=lambda:commands['rename'](self.number,askstring('Rename row','Rename row')))
-class Table(LabelFrame):
-    width=10#Developed by Sverdrup Antoniy Elias
-    height=16
-    def __init__(self,master=None,array=None,header=False,**kw):
-        LabelFrame.__init__(self,master=master,**kw)
-        self.vbar=Scrollbar(self,command=self.vscroll)
-        self.hbar=Scrollbar(self,orient='horizontal',command=self.hscroll)
-        self.hbar.grid(row=self.height+1,column=1,columnspan=self.width,sticky='nsew')
-        self.vbar.grid(row=1,column=self.width+1,rowspan=self.height,sticky='nsew')
-        self.bind("<Enter>", self._bind_mouse)
-        self.bind("<Leave>", self._unbind_mouse)
-        self.columnconfigure(tuple(range(self.height)), weight=1)
-        self.rowconfigure(tuple(range(self.width)), weight=1)
-        self.header=BooleanVar(self,value=header)
-        self.create_ui()
-        self.W=self.H=self.w=self.h=self.X=self.Y=0
-        self.bind_all('<<editvalues>>', self.update_table)
-        self.load(array)
-    def _bind_mouse(self, event=None):
-        self.bind_all("<4>", self._on_mousewheel)
-        self.bind_all("<5>", self._on_mousewheel)
-        self.bind_all("<MouseWheel>", self._on_mousewheel)
-    def _unbind_mouse(self, event=None):
-        self.unbind_all("<4>")
-        self.unbind_all("<5>")
-        self.unbind_all("<MouseWheel>")
-    def _on_mousewheel(self, event):
-        """Linux uses event.num; Windows / Mac uses event.delta"""
-        func = self.hscroll if event.state & 1 else self.vscroll 
-        if event.num == 4 or event.delta > 0:func("scroll",'-1')
-        elif event.num == 5 or event.delta < 0:func("scroll",'1')
-    def create_ui(self):
-        self.Array=[[EntryLabel(self,relief='groove',height=1)for y in range(self.height)]for x in range(self.width)]
-        self.rulerY=[TableRowButton(self,'row',y,{'insert':self.insertrow,'delete':self.deleterow,'copy':self.copyrow,'head':self.head,'clear':lambda n:self.fillrow(n,""),'default':None},height=1)for y in range(self.height)]#Developed by Sverdrup Antoniy Elias
-        self.rulerX=[TableColumnButton(self,'column',x,{'insert':self.insertcol,'delete':self.deletecol,'copy':self.copycol,'shrink':self.shrink,'rename':self.rename,
-                                                        'fill0':lambda n:self.fill(n,0),'fill1':lambda n:self.fill(n,1),'clear':lambda n:self.fill(n,""),
-                                                        'default':'shrink'})for x in range(self.width)]
-    def load(self,array,file=None):
-        #if len(array)*len(array.T):
-        self.array=self.preload(array)
-        self.m={}
-        if file is not None:self.config(text=file)
-        self.event_generate('<<loadvalues>>')
-        self.update_table()
-        #else:showerror('Fail!','Cannot load data:\nEmpty data, nothing to load')
-    def preload(self,array):return array
-    def draw_ui(self):
-        for i in range(len(self.Array)):
-            for j in range(len(self.Array[i])):
-                self.Array[i][j].grid_forget()
-        for i in self.rulerX:i.grid_forget()
-        for i in self.rulerY:i.grid_forget()
-        for x in range(self.w):
-            self.rulerX[x].grid(row=0,column=x+1,sticky='nsew')
-        for y in range(self.h):
-            self.rulerY[y].grid(row=y+1,column=0,sticky='nsew')
-            for x in range(self.w):
-                self.Array[x][y].grid(row=y+1,column=x+1,sticky='nsew')
-                self.Array[x][y].bind('<<close>>',(lambda a,b:lambda e:self.update_array(a,b))(x,y))
-    def update_array(self,x,y,val=None):
-        if not val:
-            val=self.Array[x][y].get()
-        val=number(val)
-        try:
-            self.array.iloc[y+self.Y,x+self.X]=val
-        except IndexError:
-            showerror('Error','An error has occured in pandas package.')
-        self.event_generate('<<editvalues>>');self.update_table()
-    def shrink(self,x):
-        if x in self.m:self.m[x]=not self.m[x]
-        else: self.m[x]=True
-        self.update_table()
-    def rename(self,x,name=None):
-        if name is not None:
-            a=self.array.T.reset_index();
-            b=[*a.loc[:,'index']]
-            b[x]=name
-            a.loc[:,'index']=b;
-            self.array=a.set_index('index').T
-            self.update_table()
-    def head(self,y):
-        a=self.array.T.reset_index();
-        a.loc[:,'index']=self.array.iloc[y,:]
-        self.array=a.set_index('index').T
-        self.update_table()
-    def fill(self,x,value):
-        self.array.iloc[:,x]=[value for i in range(len(self.array.iloc[:,x]))]
-        self.event_generate('<<editvalues>>');self.update_table()
-    def fillrow(self,y,value):
-        self.array.iloc[y,:]=[value for i in range(len(self.array.iloc[y,:]))]
-        self.event_generate('<<editvalues>>');self.update_table()
-    def insertcol(self,x):
-        self.array = concat([self.array.iloc[:,0:x], DataFrame(['']*self.H), self.array.iloc[:, x:]], axis=1)
-        self.event_generate('<<editvalues>>');self.update_table()
-    def deletecol(self,x):
-        self.array = concat([self.array.iloc[:,0:x], self.array.iloc[:, x+1:]], axis=1)
-        self.event_generate('<<editvalues>>');self.update_table()
-    def copycol(self,x):
-        if col:=whereto('Copy column','Where to?',self.W-1,'y'):
-            self.array.iloc[:,col]=self.array.iloc[:,x]
-            self.event_generate('<<editvalues>>');self.update_table() 
-    def copyrow(self,y):
-        if row:=whereto('Copy row','Where to?',self.H-1,'x'):
-            self.array.iloc[row,:]=self.array.iloc[y,:]
-            self.event_generate('<<editvalues>>');self.update_table() 
-    def insertrow(self,y):
-        self.array = concat([self.array.iloc[0:y,:], DataFrame(['']*self.W).T, self.array.iloc[y:, :]], axis=0).reset_index(drop=True)
-        self.event_generate('<<editvalues>>');self.update_table()
-    def deleterow(self,y):
-        self.array = concat([self.array.iloc[0:y,:], self.array.iloc[y+1:, :]], axis=0).reset_index(drop=True)
-        self.event_generate('<<editvalues>>');self.update_table()
-    def update_size(self):
-        W=len(self.array.T)
-        H=len(self.array)#Developed by Sverdrup Antoniy Elias
-        if not((W==self.W)and(H==self.H)):
-            self.w=min(W,self.width)
-            self.h=min(H,self.height)
-            self.W=W
-            self.H=H
-            self.draw_ui()
-            self.event_generate('<<resize>>')
-        while self.Y+self.h>H:self.Y-=1
-        while self.X+self.w>W:self.X-=1
-        if self.H:self.vbar.set(self.Y/self.H,(self.Y+self.height)/self.H)
-        else:self.vbar.set(0,1)
-        if self.W:self.hbar.set(self.X/self.W,(self.X+self.width)/self.W)
-        else:self.hbar.set(0,1)
-    def update_table(self,event=None):
-        self.update_size()
-        for x in range(self.w):
-            self.rulerX[x].config(text='%s: %s'%(x+self.X,list(self.array.T.index)[x+self.X]),number=x+self.X)
-        for y in range(self.h):
-            self.rulerY[y].config(text=y+self.Y,number=y+self.Y,width=len(str(self.H)))
-            for x in range(self.w):
-                if((x+self.X)in self.m)and self.m[x+self.X]:m=1
-                else:
-                    m=max(len(str(k))for k in self.array.iloc[:,x+self.X])
-                    if not m:m=1
-                self.Array[x][y].set(self.array.iloc[y+self.Y,x+self.X])
-                self.columnconfigure(x+1, weight=m)
-                self.Array[x][y].label.config(width=m)
-                self.rulerX[x].config(width=m)
-    def up(self):self.Y-=(1 if self.Y else 0);self.update_table()
-    def left(self):self.X-=(1 if self.X else 0);self.update_table()
-    def right(self):self.X+=(1 if self.X+self.width<len(self.array.T)else 0);self.update_table()
-    def down(self):self.Y+=(1 if self.Y+self.height<len(self.array)else 0);self.update_table()
-    def vscroll(self,type,amount,*a):
-        if type=='scroll':
-            if amount=='-1':self.up()
-            elif amount=='1':self.down()
-        elif type=='moveto':
-            self.Y=int(float(amount)*(self.H-1));self.update_table()
-        if self.H:self.vbar.set(self.Y/self.H,(self.Y+self.height)/self.H)
-        else:self.vbar.set(0,1)
-    def hscroll(self,type,amount,*a):
-        if type=='scroll':
-            if amount=='-1':self.left()
-            elif amount=='1':self.right()
-        elif type=='moveto':
-            self.X=int(float(amount)*(self.W-1));self.update_table()
-        if self.W:self.hbar.set(self.X/self.W,(self.X+self.width)/self.W)
-        else:self.hbar.set(0,1)
-    def __getitem__(self,key):
-        return self.array.iloc[key]
-    def __setitem__(self,key,value):
-        self.array.iloc[*key]=value
-        self.event_generate('<<editvalues>>');self.update_table()
-a={'afilmvj':'yellow','c':'khaki','de':'red','g':'purple1','h':'cyan','kpr':'DeepSkyBlue','nqstw':'lime','x':'grey','y':'YellowGreen','?.- ':'white'}
-COLOR_PROTEIN={**{j:a[i] for i in a for j in i},**{j.upper():a[i] for i in a for j in i}}
-a={'a':'lime','c':'DeepSkyBlue','tu':'red','g':'purple1','nx':'grey','?-. ':'white'}
-COLOR_GENE={**{j:a[i] for i in a for j in i},**{j.upper():a[i] for i in a for j in i}}
 FASTA=['FASTA','*.fas',(('FASTA','*.fas *.fta *.fasta'),('Nucleotide FASTA','*.ffn *.fna'),('Amino acid FASTA','*.faa'),('All files','*'))]
-del a
-class FastaColorEntry(EntryLabel):
-    def __init__(self,master,protein,text=None,cnf={},**kw):
-        EntryLabel.__init__(self,master,text=text,cnf=cnf,**kw)#Developed by Sverdrup Antoniy Elias
-        self.protein=protein
-        protein.trace_add('write',self.setcolor)
-        self.trace_add('write',self.recolor)
-        self.setcolor()
-    def close(self,event=None):
-        self.pack_forget_()
-        self.label.pack(side='left',fill='x',expand=True)
-        self.event_generate('<<close>>')
-        self.recolor()
-    def setcolor(self,*a):
-        self.color=COLOR_PROTEIN if self.protein.get()else COLOR_GENE
-        self.recolor()
-    def recolor(self,*a):
-        self.label.config(bg=self.color.get(self.get(),'white'))
-class FastaTable(Table):
-    width=40
-    height=20
-    def preload(self,array):return array.T.reset_index(drop=True).T
-    def create_ui(self):
-        self.protein=BooleanVar(value=False)
-        self.Array=[[FastaColorEntry(self,self.protein,font=(None,7),relief='flat')for y in range(self.height)]for x in range(self.width)]
-        self.rulerY=[FastaTableButton(self,'row',y,{'insert':self.insertrow,'delete':self.deleterow,'show':self.showy,'rename':self.rename,'default':'show'},font=(None,7))for y in range(self.height)]#Developed by Sverdrup Antoniy Elias
-        self.rulerX=[FastaTableButton(self,'column',x,{'insert':self.insertrow,'delete':self.deleterow,'show':self.showx,'default':'show'},font=(None,7))for x in range(self.width)]
-        self.loc=Label(self,relief='groove')
-        self.loc.grid(row=0,column=0)
-    def rename(self,x,name=None):
-        if name is not None:
-            b=[*self.array.index]
-            b[x]=name
-            self.array.index=b
-            self.update_table() 
-    def showx(self,x):
-        showinfo('Coordinates','Column: %s'%(x))
-    def showy(self,y):
-        showinfo('Coordinates','Row: %s'%(y))
-    def insertcol(self,x):
-        self.array = concat([self.array.iloc[:,0:x], DataFrame(['']*self.H), self.array.iloc[:, x:]], axis=1).fillna("").T.reset_index(drop=True).T
-        self.update_table()
-    def deletecol(self,x):
-        self.array = concat([self.array.iloc[:,0:x], self.array.iloc[:, x+1:]], axis=1).fillna("").T.reset_index(drop=True).T
-        self.event_generate('<<editvalues>>')
-    def deletecols(self,start,end):
-        self.array = concat([self.array.iloc[:,0:start], self.array.iloc[:, end+1:]], axis=1).fillna("").T.reset_index(drop=True).T
-        self.event_generate('<<editvalues>>')
-    def insertrow(self,y):
-        self.array = concat([self.array.iloc[0:y,:], DataFrame(['']*self.W).T, self.array.iloc[y:, :]], axis=0).fillna("")
-        self.event_generate('<<editvalues>>')
-    def deleterow(self,y):
-        self.array = concat([self.array.iloc[0:y,:], self.array.iloc[y+1:, :]], axis=0).fillna("")
-        self.event_generate('<<editvalues>>')
-    def update_table(self,event=None):
-        self.update_size()
-        self.loc.config(text='row:%s column:%s'%(self.Y,self.X))
-        indice=[str(i)for i in self.array.index]
-        for x in range(self.w):
-            self.rulerX[x].config(text=(x+self.X)%10,number=x+self.X,width=1,anchor='w')
-        for y in range(self.h):
-            self.rulerY[y].config(text=indice[y+self.Y][:32],number=y+self.Y,width=min(len(indice[y+self.Y]),32))
-            for x in range(self.w):
-                if((x+self.X)in self.m)and self.m[x+self.X]:m=1
-                else:
-                    m=max(len(str(k))for k in self.array.iloc[:,x+self.X])
-                    if not m:m=1
-                self.Array[x][y].set(self.array.iloc[y+self.Y,x+self.X])
-                self.columnconfigure(x+1, weight=m)
-                self.Array[x][y].label.config(width=m)
 
 class TableWrapper(LogPrinter,WrapperStub):
     format=('CSV','*.csv',(('CSV table','*.csv'),('All files','*')))
@@ -370,17 +72,92 @@ class TableWrapper(LogPrinter,WrapperStub):
     def load(self,file):
         try:
             self.print(f'Loading {file}...',end=' ')
-            with open(file) as csvfile: array = DataFrame(data = [[number(i)for i in row] for row in csv.reader(csvfile, self.delimiter.get())]).replace(to_replace=None,value='',regex=[None])#Developed by Sverdrup Antoniy Elias
+            with open(file) as csvfile: array = DataFrame(data = [[number(i)for i in row] for row in csv.reader(csvfile, self.delimiter.get())]).replace(to_replace=None,value='',regex=[None])
             if self.table.header.get():
                 array.index=['index',*array.index[1:]]
                 array=array.T.set_index('index').T.reset_index(drop=True)
             self.table.load(array,file)
-            del array#Developed by Sverdrup Antoniy Elias
+            del array
             self.print('done')
         except UnicodeDecodeError:showerror('Error','Error loading file\nEncoding is not UTF-8')
     def save(self,file):
         if self.table.header.get():self.table.array.to_csv(file,sep=self.delimiter.get(),encoding='utf-8',index=False)
         else:self.table.array.to_csv(file,sep=self.delimiter.get(),encoding='utf-8',index=False,header=False)
+##class LeftTable(TableWrapper):
+##    def body(self,**kw):
+##        col=LabelFrame(self.top,text='Columns')
+##        col.grid(row=0,column=2,sticky='nsew')
+##        
+##        tab=TableWrapper.body(self)
+##        self.table.bind('<<resize>>',self.resize)
+##        
+##        self.taxonomy=TaxSpin(col,self.table.W-1)
+##        self.taxonomy.grid(row=0,column=0,rowspan=3)
+##        self.exist=OmniSpin(col,text='Exists',width=4,cnf={'from':0,'to':self.table.W-1})
+##        self.exist.grid(row=0,column=1,padx=10,sticky='nsew')
+##        self.accession=OmniSpin(col,text='Accession',width=4,cnf={'from':0,'to':self.table.W-1})
+##        self.accession.grid(row=1,column=1,padx=10,sticky='nsew')
+##        self.saprobity=OmniSpin(col,text='Saprobity',width=4,cnf={'from':0,'to':self.table.W-1})
+##        self.saprobity.grid(row=2,column=1,padx=10,sticky='nsew')
+##        return self.table
+##    def resize(self,event):
+##        for i in[self.exist,self.accession,self.saprobity]:i['to']=self.table.W-1
+##    def accessions(self):
+##        return self[:,self.accession.get()]
+##    def taxnames(self):
+##        if len(self.taxonomy.get())==2:
+##            taxnames = list(map(lambda a:a[0]+' '+a[1],zip(self[:,self.taxonomy.get()[0]], \
+##                                                           self[:,self.taxonomy.get()[1]])))
+##        else:taxnames = self[:,self.taxonomy.get()[0]]
+##        return taxnames
+##    def saprobities(self):
+##        return self[:,self.saprobity.get()]
+
+##class TableWrapper2(WrapperStub):
+##    format=('Table','*.xlsx *.xls *.ods',(('Electronic tables','*.xlsx *.xls *.ods'),('Microsoft Excel 2007-2021','*.xlsx'),('Microsoft Excel 95-2003','*.xls'),('OpenOffice/LibreOffice','*.ods'),('All files','*')))
+##    def body(self,**kw):
+##        dl=LabelFrame(self.ls,text='Separator')
+##        dl.grid(row=2,column=0)
+##        self.file=None
+##        self.saved=True
+##        self.table=Table(self.container,array=DataFrame([['']*10 for i in range(20)]))
+##        self.table.bind('<<editvalues>>',self.repl)
+##        self.remote=Notebook(self.table,style='TW2.TNotebook')
+##        self.remote.grid(row=self.table.height+2,column=0,columnspan=self.table.width+2,sticky='nsew')
+##        self.sheets=[]
+##        return self.table
+##    def __getitem__(self,key):
+##        return self.table[key]
+##    def __setitem__(self,key,value):
+##        self.table[key]=value
+##    def load(self,file):
+##        for i in range(len(self.remote.tabs())):self.remote.forget(0)
+##        self.sheets=[]
+##        if self.file:
+##            self.remote.unbind('<<NotebookTabChanged>>')
+##            self.file.close()
+##            self.file=None
+##        self.file=ExcelFile(file)
+##        self.names=self.file.sheet_names
+##        for i in range(len(self.file.sheet_names)):
+##            self.remote.add(Frame(self.remote),text=self.file.sheet_names[i])
+##            self.sheets.append(read_excel(self.file, self.file.sheet_names[i], engine='openpyxl'))#self.file.parse(self.file.sheet_names[i]).fillna(''))
+##        self.file.close()
+##        self.file=None
+##        self.table.load(self.sheets[0],file)
+##        self.remote.bind('<<NotebookTabChanged>>',self.flip)
+##    def repl(self,event):
+##        print(self.remote.index("current"),'stoopid!')
+##        self.sheets[self.remote.index("current")]=self.table.array
+##    def flip(self,event):
+##        print('loading')
+##        self.table.load(self.sheets[self.remote.index("current")].fillna(''))
+##        print('loaded')
+##    def save(self,file):
+##        writer=ExcelWriter(file,mode='w')#,if_sheet_exists="replace")
+##        for i in range(len(self.sheets)):
+##            self.sheets[i].to_excel(writer, sheet_name=self.names[i],index=None)
+##        writer.close()
         
 class Downloader:
     def geneprot(self, LIST, mask, offset, fetch, base, pre, main, main2, post, mode, eskw={},efkw={},**kw):
@@ -486,14 +263,14 @@ class Middle(Downloader,LabelFrame):
         rnd=Button(b,text='Bootstrap runs',state='disabled');rnd.pack(side='left',fill='x',expand=True)
         dd=Button(b,text='Deduplicate',command=self.dedup);dd.pack(side='left',fill='x',expand=True)
         self.inner.add(b)
-        ##bb=LabelFrame(self.inner,text='Deduplicate')
-        #dd1=Button(bb,text='Reads',command=self.dedup1);dd1.pack(side='left',fill='x',expand=True)
-        #dd2=Button(bb,text='accessions',command=self.dedup2);dd2.pack(side='left',fill='x',expand=True)
-        #dd3=Button(bb,text='taxids',command=self.dedup3);dd3.pack(side='left',fill='x',expand=True)
-        #self.inner.add(bb)
+##        bb=LabelFrame(self.inner,text='Deduplicate')
+##        dd1=Button(bb,text='Reads',command=self.dedup1);dd1.pack(side='left',fill='x',expand=True)
+##        dd2=Button(bb,text='accessions',command=self.dedup2);dd2.pack(side='left',fill='x',expand=True)
+##        dd3=Button(bb,text='taxids',command=self.dedup3);dd3.pack(side='left',fill='x',expand=True)
+##        self.inner.add(bb)
         
         c=LabelFrame(self.inner,text='FASTA Tasks')
-        rn=Button(c,text='Rename',command=self.rename);rn.pack(side='left',fill='x',expand=True)
+        rn=Button(c,text='Rename',state='disabled');rn.pack(side='left',fill='x',expand=True)
         mg=Button(c,text='Merge',state='disabled');mg.pack(side='left',fill='x',expand=True)
         ft=Button(c,text='Put into table',command=self.storefasta);ft.pack(side='left',fill='x',expand=True)
         self.inner.add(c)
@@ -503,12 +280,15 @@ class Middle(Downloader,LabelFrame):
         tax1=Button(d,text='Offline',command=self.offlinetaxonomy);tax1.grid(row=0,column=1,sticky='nsew')
         tax2=Button(d,text='Online',command=self.onlinetaxonomy,state='normal'if online else'disabled');tax2.grid(row=0,column=2,sticky='nsew')
         Label(d,text='Get sequence data').grid(row=1,column=0,sticky='nsew')
-        seq1=Button(d,text='Offline',state='disabled');seq1.grid(row=1,column=1,sticky='nsew')
+        seq1=Button(d,text='Offline',state='disabled',command=self.offlinedownload);seq1.grid(row=1,column=1,sticky='nsew')
         seq2=Button(d,text='Online',command=self.onlinedownload,state='normal'if online else'disabled');seq2.grid(row=1,column=2,sticky='nsew')
-        self.controls=[m1,m2,
+        self.controls=[m1,m2,#m3,
                        db1,db2,db3,
-                       dd,rn,mg,ft,
-                       tax1]
+                       #bl,run,rnd,
+                       dd,#rn,mg,
+                       ft,
+                       tax1,#seq1
+                       ]
         if not online:
             Label(status,text='Package "bio" is unavailable!',relief='raised',state='disabled',height=7).grid(row=2,column=0,columnspan=3,sticky='nsew')
         else:
@@ -562,7 +342,7 @@ class Middle(Downloader,LabelFrame):
                 mask=(None if(io[0]['Filter']is None)else(self.table[:,io[0]['Filter']]))
                 return mask
             return None
-    def setdb(self,type):#Developed by Sverdrup Antoniy Elias
+    def setdb(self,type):
         if type=='GB2Taxid':
             enabled=self.DB['gb2taxid'].zip
             if enabled:return {'title':'GB2Taxid','prompt':self.DB['gb2taxid'].zip.filename,'value':True,'valid':True}
@@ -577,7 +357,7 @@ class Middle(Downloader,LabelFrame):
         fl2=lambda f,a,b:DataFrame([f(bool(i[0]),bool(i[1]))for i in zip(a,b)])
         def verify(io):
             if ops[io[0]['op']]==None:showerror('Error','You must select an option!');return False
-            if io[0]['op']=='IF [I1] THEN [I2] ELSE [I3]'and((io[0]['2']is None)or(io[0]['3']is None)):showerror('Error','This function requires 3 inputs!');return False#Developed by Sverdrup Antoniy Elias
+            if io[0]['op']=='IF [I1] THEN [I2] ELSE [I3]'and((io[0]['2']is None)or(io[0]['3']is None)):showerror('Error','This function requires 3 inputs!');return False
             elif io[0]['op'].startswith('[I1]')and io[0]['op'].endswith('[I2]')and(io[0]['2']is None):showerror('Error','This function requires 2 inputs!');return False
             elif io[0]['op'].startswith('CONCAT')and(io[0]['2']is None):return False
             else:return True
@@ -598,17 +378,17 @@ class Middle(Downloader,LabelFrame):
     def manipulate2(self):
         io=whereto('Statistics','Select column',self.table.table.W-1,'-y')
         if self.debug.get():print(io)
-        elif io:
+        elif io is not None:
             col=self.table[:,io]
-            s=c=0
+            s=c=0;m=float('inf');M=float('-inf')
             for i in col:
-                if isnum(i):s+=i;c+=1
-            showlines('Statistics','Statistics',{'Sum':s,'Mean':0 if c==0 else(s/c),'Count':c})
+                if isnum(i):s+=i;c+=1;m=min(i,m);M=max(i,M)
+            showlines('Statistics','Statistics',{'Sum':s,'Mean':0 if c==0 else(s/c),'Count':c,'Minimum':m,'Maximum':M})
     def dedup(self):
         spin=self.getspin()
         def verify(io):
             valid=1
-            if(io[0]['dedup3']is None)and(bool(io[1]['Taxonomy']['Name'])or(io[1]['Taxonomy']['Lineage']is not None)):showerror('Error','Deduplication stage 3 must be enabled to use Taxonomy');valid=0#Developed by Sverdrup Antoniy Elias
+            if(io[0]['dedup3']is None)and(bool(io[1]['Taxonomy']['Name'])or(io[1]['Taxonomy']['Lineage']is not None)):showerror('Error','Deduplication stage 3 must be enabled to use Taxonomy');valid=0
             if(bool(io[1]['Taxonomy']['Name'])or(io[1]['Taxonomy']['Lineage']is not None))and(io[0]['Taxdump']is None):showerror('Error','Load new_taxdump.zip first!');valid=0
             return valid
         io=askio('Deduplicate','Select columns:',
@@ -710,7 +490,7 @@ class Middle(Downloader,LabelFrame):
             accs=self.table[:,io[0]['Accessions']]
             accs2={}
             for i in range(len(accs)):
-                if accs[i]not in accs2:accs2[accs[i]]=1#Developed by Sverdrup Antoniy Elias
+                if accs[i]not in accs2:accs2[accs[i]]=1
                 else:accs2[accs[i]]+=1
             new_table=DataFrame(data=accs2.items(),columns=['Accession','Count'])
             self.table.table.load(new_table,'Dedup stage 2')
@@ -752,7 +532,7 @@ class Middle(Downloader,LabelFrame):
                      setio('Outputs',{'txid':(DSpin,[],{**spin,**{'type':'check','text':'taxid'}}),
                                       'name':(DSpin,[],{**spin,**{'type':'check','text':'Scientific name'}}),
                                       'Taxonomy':(RadioGroup,[],{'type':'check','title':'Taxonomic lineage','widgets':{
-                                          'Full':(DSpin,[],{**spin,**{'type':'radio','text':'Full lineage'}}),#Developed by Sverdrup Antoniy Elias
+                                          'Full':(DSpin,[],{**spin,**{'type':'radio','text':'Full lineage'}}),
                                           'Ranked':(TaxSpin2,[],{'type':'radio','maxvalue':self.table.table.W-1}),
                                       }})
                                       }, validate=any),
@@ -782,7 +562,7 @@ class Middle(Downloader,LabelFrame):
                         if self.stopped.get():raise KeyboardInterrupt
                         if mode=='g2t':
                             txid=self.DB['gb2taxid'][accs[i][:2],accs[i],'Update database!']
-                            if txid=='Update database!':F=1;self.print(f'{i}/{l}: fail (not found - update database?)')#Developed by Sverdrup Antoniy Elias
+                            if txid=='Update database!':F=1;self.print(f'{i}/{l}: fail (not found - update database?)')
                             else:D=1;
                         elif mode=='n2t':
                             txid=self.DB['taxdump']['revnames',names[i],'']
@@ -850,7 +630,7 @@ class Middle(Downloader,LabelFrame):
         self.print(f'{i}/{l}: success')
     def tmain2(self,curr,*,LIST=None,FAILS=None,i=None,l=None,f=None,d=None,**kw):
         if kw['ex']is not None:self.table[i,kw['ex']]=int(bool(curr["IdList"]))
-        if kw['tx']is not None:self.table[i,kw['tx']]=(curr["IdList"][0]if curr["IdList"]else'')#Developed by Sverdrup Antoniy Elias
+        if kw['tx']is not None:self.table[i,kw['tx']]=(curr["IdList"][0]if curr["IdList"]else'')
         self.print(f'{i}/{l}: success')
     def rename(self,io=None,auto=False):
         if not auto:io=askio('Rename FASTA for phylogeny','Select columns:',
@@ -892,6 +672,37 @@ class Middle(Downloader,LabelFrame):
     def main(self,curr,*,LIST=None,FAILS=None,i=None,l=None,f=None,d=None,**kw):
         self.fasta.text.insert('end',curr)
         self.print(f'{i}/{l}: success')
+    def offlinedownload(self,io=None,auto=False):
+        if not auto:io=askio('Get sequences offline','Select columns:',
+                            setio('Inputs',{'Accession':(DSpin,[],{'text':'Accession','width':4,'cnf':{'from':0,'to':self.table.table.W-1}}),
+                                  'Filter':(DSpin,[],{'type':'check','text':'Filter','width':4,'cnf':{'from':0,'to':self.table.table.W-1}}),
+                                  'FASTA':(DCombo,[],{'text':'Reference FASTA','values':self.DB['FDB'].names})},validate=all),
+                            setio('Outputs',{'FASTA':(Constant,[],{'title':'FASTA','prompt':'<text output>','state':'disabled'})},validate=None),validate=None)      
+        if self.debug.get():print(io)
+        elif io:
+            self.print('Running offline fetch sequence job...')
+            self.cpr()
+            mask=((self.table[:,io[0]['Filter']])if(io[0]['Filter'])else None)
+            lst=self.table[:,io[0]['Accession']]
+            fas=io[0]['FASTA']
+            print(fas)
+            print(zindex:=self.DB['FDB'].zindex[fas])
+            print(asvindex:=[i[:i.index(' ')]for i in zindex])
+            
+            for i in range(len(lst)):
+                if mask[i]:
+                    try:
+                        self.text.insert('end',self.DB['FDB'][fas,[*zindex][asvindex.index(lst[i])]])
+                    except:
+                        #if lst[i][-2]=='.':
+                        print('not in asv')
+                        #try:
+                        #    self.text.insert('end',self.DB['FDB'][fas,[*zindex][asvindex.index(lst[i][:-2])]])
+                        #except:print('not in as')
+            #self.geneprot(LIST=self.table[:,io[0]['Accession']], mask=mask, offset=0, fetch=True, pre=self.skip, main=self.skip, main2=self.main, post=self.skip,
+            #          base={'GenBank':'nuccore','GenPept':'protein'}[self.base.get()],
+            #          eskw={'retmax':3},efkw={'rettype':'fasta','retmode':'text'})
+            self.ding(auto)
     def onlinedownload(self,io=None,auto=False):
         def verify2(io):
             return 0 if io['ibase']=='' else 1
@@ -1010,6 +821,7 @@ class FastaTableWrapper(FastaWrapper):
     def syncvtt(self,event=None):
         self.text.delete(1.0,'end')
         self.text.insert(1.0,'\n'.join([i+'\n'+''.join(self.table.array.loc[i])for i in [*self.table.array.index]]))
+        #self.text.frame.config(text=self.table['text'])
     def syncttv(self,event=None):
         if not((event is not None) and \
                (event.char in {'\x01':'Select all','\x18':'Cut','\x03':'Copy','\x16':'Paste',
@@ -1249,6 +1061,70 @@ class Bulker(Downloader,WrapperStub):
                       pre=self.pre, main=self.skip,main2=self.main, post=self.post, base={'GenBank':'nuccore','GenPept':'protein'}[self.base.get()],
                       eskw={'retmax':3},efkw={'rettype':'fasta','retmode':'text'})
 
+def rebuild():
+    io=askcustom('Rebuild GB2Taxid','''\
+This operation will take significant time and disk space, cannot be paused (if cancelled, all progress will be lost)
+and will make the computer unusable until database rebuild is completed.
+If you want to continue, please make sure that:''',
+                     (Group,[],{'title':'Checklist','widgets':{'1':(DBool,[],{'type':'check','default':False,'justify':'left','value':True,'prompt':'The computer has no scheduled restarts, is plugged in (if laptop) or has an UPS (if desktop)'}),
+                      '2':(DBool,[],{'type':'check','default':False,'justify':'left','value':True,'prompt':'Other users are informed not to shut down or restart the computer. Sleep mode and hibernation are disabled.'}),
+                      '3':(DBool,[],{'type':'check','default':False,'justify':'left','value':True,'prompt':'All other apps are closed and there are no background tasks running.'}),
+                      '4':(DBool,[],{'type':'check','default':False,'justify':'left','value':True,'prompt':'There are no other users currently working on this computer in person or via remote connection'}),
+                      '5':(DBool,[],{'type':'check','default':False,'justify':'left','value':True,'prompt':'There are no users planning to use this computer in the next 18-24 hours'}),
+                      '6':(DBool,[],{'type':'check','default':False,'justify':'left','value':True,'prompt':'At least 24 GB of free disk space is available'}),
+                      },'validate':all}))
+    if False:
+        from os import remove
+        from os.path import getsize
+        from zipfile import ZipFile
+        print('loading...',end='')
+        f=open('D:/SMB/taxonomy ncbi/nucl_gb.accession2taxid')
+        print('done')
+        f.read(38)
+        if f.readline()=='accession\taccession.version\ttaxid\tgi\n':print('header')
+        fl={}
+        n=0
+        print('processing...')
+        while (l:=f.readline()):
+            s=l.split('\t')
+            if s[0][:2] not in fl:
+                fl[s[0][:2]]=open('gb2taxid/'+s[0][:2],'w')
+                fl[s[0][:2]].write(s[0]+';'+s[2]+'\n')
+                fl[s[0][:2]].close()
+            elif fl[s[0][:2]].closed:
+                fl[s[0][:2]]=open('gb2taxid/'+s[0][:2],'a')
+                fl[s[0][:2]].write(s[0]+';'+s[2]+'\n')
+                fl[s[0][:2]].close()
+            else:print('bruh')
+            n+=1
+            if n<1000000:
+                if n<100000:
+                    if n<10000:
+                        if n<1000:
+                            if n<100:
+                                if n<10:print(n)
+                                elif n%10==0:print(n)
+                            if n%100==0:print(n)
+                        if n%1000==0:print(n)
+                    if n%10000==0:print(n)
+                if n%100000==0:print(n)
+            elif n%1000000==0:print(n)
+        print('done')
+        print('zipping...')
+        z=ZipFile('gb2taxid/gb2taxid.zip','w',8)
+        n=0
+        l=len([*fl])
+        for i in fl:
+            z.write('gb2taxid/'+i,i)
+            n+=1
+            print(f'{n}/{l}')
+        z.close()
+        print('done')
+        print('cleaning up...')
+        for i in fl:remove('gb2taxid/'+i)
+        print('done')
+
+
 tk=Tk()
 tk.withdraw()
 tk.title('GeneProt marker gene/protein metagenomic sequencing data manipulation and ecological assessment expert system')# (GP MPGMSD DM&EAES)')
@@ -1266,6 +1142,7 @@ fasta=FastaWrapper(page1,'GeneProt',width=300)
 table=TableWrapper(page1,'Table')
 DB['db']=db=DatabaseProvider(tk)
 DB['gb2taxid']=gb2tax=GB2TaxIdProvider(db)
+gb2tax.rebuild=rebuild
 DB['taxdump']=taxdump=TaxdumpProvider(db)
 DB['FDB']=FDB=FASTAProvider(db)
 mid=Middle(page1,table,fasta,online=online)
@@ -1290,5 +1167,5 @@ radio.instance(FDB)
 
 load.destroy()
 tk.deiconify()
-#exec(open('deacftpo.py').read())
+exec(open('deacftpo.py').read())
 tk.mainloop()

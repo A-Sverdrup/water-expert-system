@@ -1,81 +1,13 @@
 from custom.customdialog import *
-from custom.wheretodialog import *
 from custom.gui import *
 from custom.gui import _DatabaseProvider
-from custom.op import *
+from custom.table import *
 from tkinter import Button,Checkbutton,Frame,Label,LabelFrame,Listbox,Scrollbar,Tk,Toplevel,Pack,Grid,Place,BooleanVar,IntVar
-from tkinter.messagebox import showerror
-from tkinter.filedialog import askopenfilename,asksaveasfilename
 from tkinter.messagebox import showwarning,showerror
-from tk2 import OmniSpin,OpenFileButton
+from tkinter.filedialog import askopenfilename,asksaveasfilename
 from pandas import read_csv,DataFrame
 from os.path import exists
-class TaxSpin(Frame):
-    def __init__(self,master=None,type=None,cnf={},maxvalue=10,**kw):
-        self.frame=RadioCheck(master,text='Scientific name',type=type,variable=kw.pop('radiovariable',None),value=kw.pop('radiovalue',None))
-        Frame.__init__(self,master=self.frame)
-        self.sw=BooleanVar(self,False)
-        self.col=0
-        self.split=Checkbutton(self,text='Split?',variable=self.sw,height=1)
-        self.split.grid(row=0,column=self.col,sticky='nsew')
-        self.sw.trace_add('write',self.showhide)
-        self.genus=OmniSpin(self,width=4,cnf={'from':0,'to':maxvalue})
-        self.genus.grid(row=1,column=self.col,padx=0,sticky='nsew')
-        self.species=OmniSpin(self,text='Species',width=4,cnf={'from':0,'to':maxvalue})
-        self.frame.setwidget(self)
-    def config(self,**kw):
-        if 'state' in kw:
-            self.genus.config(state=kw['state'])
-            self.species.config(state=kw['state'])
-            self.split.config(state=kw['state'])
-            del kw['state']
-        Frame.config(self,**kw)
-    def showhide(self,*a):
-        if self.sw.get():
-            self.species.grid(row=2,column=self.col,sticky='nsew')
-            self.genus.frame.configure(text='Genus',relief='groove')
-        else:
-            self.species.grid_forget()
-            self.genus.frame.configure(text='',relief='flat')
-    def get(self):
-        if self.frame.get():
-            if self.sw.get():return(self.genus.get(),self.species.get())
-            else:return(self.genus.get(),)
-    def validate(self):return 1
-class TaxSpin2(LabelFrame):
-    def __init__(self,master=None,type=None,maxvalue=10,**kw):
-        self.frame=RadioCheck(master,text='Ranked lineage',type=type,variable=kw.pop('radiovariable',None),value=kw.pop('radiovalue',None))
-        Frame.__init__(self,master=self.frame)
-        self.value=0
-        self.enabled=maxvalue>=9
-        if self.enabled:
-            self.spin=OmniSpin(self,width=4,type=str,values=tuple([f'{i}-{i+8}'for i in range(maxvalue-7)]))
-            self.spin.grid(row=0,column=0,sticky='nsew')
-        else:
-            self.spin=Label(self,text='Not enough columns')
-            self.spin.pack(fill='both',expand=True)
-        self.frame.setwidget(self)
-    def link(self,r):
-        self.value=self.spins[r].get()-r
-        for i in range(len(self.spins)):self.spins[i].set(self.value+i)
-    def get(self):
-        if self.frame.get():
-            if self.enabled:
-                a=self.spin.get().split('-')
-                return slice(int(a[0]),int(a[1]),None)
-            else:return None
-    def validate(self):
-        if self.enabled:return 1
-        else:showerror('Error','Not enough columns for ranked lineage!');return 0
-    def config(self,**kw):
-        if'state'in kw:self.spin.config(state=kw['state']);del kw['state']
-def askio(title=None, prompt=None, inputs=None, outputs=None, validate=all, **kw):
-    return askcustom(title=title,prompt=prompt,widget=(Group,[],{'orient':'horizontal','widgets':{0:inputs,1:outputs},'validate':all}),validate=validate, **kw)
-def setio(title,widgets,**kw):
-    return (Group,[],{'title':title,'widgets':widgets,**kw})
-def atleastoneoutput(io):
-    if any([(io[1][i]is not None)for i in io[1]]):return 1
-    else:showerror('Error!','Enable at least one output');return 0
+
 class ScrolledList(Listbox):
     default = "<empty>"
     def __init__(self, master, **options):
@@ -183,10 +115,6 @@ class FASTAProvider(_DatabaseProvider):
                     self.print('Verifying Z-Index...',end=' ')
                     self.zindex[name]=self.openz(name+'.zindex')
                     self.rebuild(name)
-##                    if not self.verify(file,self.zindex[name]):
-##                        self.print('fail')
-##                        self.zbuild(name,file)
-##                    else:self.print('done')
                 else:
                     self.print('Z-index is missing!')
                     self.zbuild(name,file)
@@ -249,14 +177,13 @@ class FASTAProvider(_DatabaseProvider):
         with open(file,'w')as z:z.write('\n'.join(self.fasta))
     def close(self):
         for i in range(len(self.names)):self.delete(self.names[0])
-    def open(self,file):
+    def load(self,file):
         self.close()
         self.openzl(file)
     def openzl(self,file):
         with open(file)as z:
             for i in z.read().splitlines():
                 self.add(i)
-    load=open
     def send(self):
         io=askcustom('Select file','Select file:',setio('',{'FASTA':(DCombo,[],{'text':'FASTA','values':self.names})}))
         print(io)
@@ -267,3 +194,6 @@ class FASTAProvider(_DatabaseProvider):
             with open(file,'w')as f:
                 f.write(payload)
             self.add(file)
+
+class OtherError(Exception):
+    '''Custom error message for Downloader'''

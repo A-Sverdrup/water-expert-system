@@ -1,12 +1,14 @@
-from tkinter import Button,Entry,Frame,LabelFrame,Label,Listbox,Menu,PanedWindow,Toplevel,Scrollbar,StringVar,Pack,Grid,Place
+from tkinter import Button,Entry,Frame,LabelFrame,Label,Listbox,Menu,PanedWindow,Toplevel,Scrollbar,StringVar,BooleanVar,Pack,Grid,Place
 from tkinter.filedialog import askopenfilename,asksaveasfilename
 from tkinter.messagebox import showerror
 from tkinter.ttk import Notebook
-if __name__!='__main__':from tk2 import ToggleRadioButton
+from tk2 import ToggleRadioButton
 from zipfile import ZipFile
-__all__=['LoadSave','OpenClose','LogPrinter','WrapperStub','Search','Transceiver','Dashboard','DatabaseProvider','_DatabaseProvider','GB2TaxIdProvider','TaxdumpProvider']
+__all__=['LoadSave','OpenClose','LogPrinter','WrapperStub','Search','Transceiver','Dashboard','DatabaseProvider','_DatabaseProvider','GB2TaxIdProvider','TaxdumpProvider',]
 
 class LoadSave(LabelFrame):
+    B1='Load %s'
+    B2='Save %s'
     def __init__(self,master,type,defaultextension,filetypes,load=None,save=None):
         LabelFrame.__init__(self,master=master,text='File')
         self.type=type
@@ -14,40 +16,25 @@ class LoadSave(LabelFrame):
         self.ft=filetypes
         self.load=load
         self.save=save
-        if load:Button(self,text='Load %s'%type,command=self.open).grid(row=0,column=0,padx=10,sticky='we')
-        if save:Button(self,text='Save %s'%type,command=self.saveas).grid(row=(1 if load else 0),column=0,padx=10,sticky='we')
-    def open(self):
+        if load:Button(self,text=self.B1%type,command=self.F1).grid(row=0,column=0,padx=10,sticky='we')
+        if save:Button(self,text=self.B2%type,command=self.F2).grid(row=(1 if load else 0),column=0,padx=10,sticky='we')
+    def F1(self):
         if (file:=askopenfilename(defaultextension=self.de,filetypes=self.ft)):
-            #try:
+##            try:
             self.load(file)
-            #except:showerror('Fail!','Cannot load %s file!'%self.type)
-    def saveas(self):
+##            except:showerror('Fail!','Cannot load %s file!'%self.type)
+    def F2(self):
         if (file:=asksaveasfilename(defaultextension=self.de,filetypes=self.ft)):
-            #try:
+##            try:
             self.save(file)
-            #except:showerror('Fail!','Cannot save %s file!'%self.type)
-
-class OpenClose(LabelFrame):
-    def __init__(self,master,type,defaultextension,filetypes,load=None,unload=None):
-        LabelFrame.__init__(self,master=master,text='File')
-        self.type=type
-        self.de=defaultextension
-        self.ft=filetypes
-        self.load=load
-        self.unload=unload
-        if load:Button(self,text='Open %s'%type,command=self.open).grid(row=0,column=0,padx=10,sticky='we')
-        if unload:Button(self,text='Close %s'%type,command=self.close).grid(row=(1 if load else 0),column=0,padx=10,sticky='we')
-    def open(self):
-        if (file:=askopenfilename(defaultextension=self.de,filetypes=self.ft)):
-            #try:
-            self.load(file)
-            #except:showerror('Fail!','Cannot open %s file!'%self.type)
-    def close(self):
+##            except:showerror('Fail!','Cannot save %s file!'%self.type)
+class OpenClose(LoadSave):
+    B1='Open %s'
+    B2='Close %s'
+    def F2(self):
         try:
             self.unload()
         except:showerror('Fail!','Cannot close %s!'%self.type)
-
-
 class WrapperStub(LabelFrame):
     lstype='ls'
     def __init__(self,master,name,**kw):
@@ -56,8 +43,8 @@ class WrapperStub(LabelFrame):
         self.container=PanedWindow(self,orient='vertical')
         self.container.pack(fill='both',expand=True)
         self.top=Frame(self.container)
-        if self.lstype=='ls':self.ls=LoadSave(self.top,*self.format,self.load,self.save)
-        elif self.lstype=='oc':self.ls=OpenClose(self.top,*self.format,self.open,self.close)
+        if self.lstype in'ls':self.ls=LoadSave(self.top,*self.format,(self.load if('l'in self.lstype)else None),(self.save if('s'in self.lstype)else None))
+        elif self.lstype in'oc':self.ls=OpenClose(self.top,*self.format,(self.open if('o'in self.lstype)else None),(self.close if('c'in self.lstype)else None))
         self.ls.grid(row=0,column=0,rowspan=10,sticky='nsew')
         self.container.add(self.top)
         self.container.add(self.body(**kw))
@@ -195,9 +182,9 @@ class GB2TaxIdProvider(_DatabaseProvider):
     format=['DB','*.zip',(('ZIP archive','*.zip'),)]        
     def body2(self,master):
         self.ls.grid(row=0,column=0,rowspan=2)
-        self.areyousure=Button(self.top,text='Rebuild Database',command=self.nope)
-        self.areyousure.bind('<Double-1>',self.scram)
-        self.areyousure.grid(row=1,column=1)
+##        self.areyousure=Button(self.top,text='Rebuild Database',command=self.nope)
+##        self.areyousure.bind('<Double-1>',self.scram)
+##        self.areyousure.grid(row=1,column=1)
         alph='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
         self.grid={}
         master.rowconfigure(tuple(range(36)),weight=1)
@@ -277,4 +264,3 @@ class TaxdumpProvider(_DatabaseProvider):
         for i in self.grid:
             self.grid[i].config(bg=('red'if i in use else 'grey')if i in self.filenames else 'systemButtonFace',state=('normal'if i in use else 'disabled')if i in self.filenames else'disabled')
         self.grid['revnames'].config(bg='red',state='normal')
-        
