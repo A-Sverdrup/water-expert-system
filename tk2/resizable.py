@@ -1,5 +1,12 @@
 from tkinter import Frame,LabelFrame,Text,Scrollbar,Pack,Grid,Place
-
+if __name__ == "__main__":
+    from contextmenu import ContextMenu, COPY
+    from omnitext import OmniText
+    from zoomscale import ZoomScale
+else:
+    from tk2.contextmenu import ContextMenu, COPY
+    from tk2.omnitext import OmniText
+    from tk2.zoomscale import ZoomScale
 __all__=['ResizableFrame','ResizableLabelFrame','ResizableOmniText']
 
 class Resizable():
@@ -49,63 +56,73 @@ class Resizable():
         self.resizeMode='none'
         self.config(cursor='')
 
+def stripkw(kw):
+    kw2={}
+    if'minwidth'in kw:
+        kw2['minwidth']=kw['minwidth']
+        if'width'not in kw:kw['width']=kw['minwidth']
+        del kw['minwidth']
+    if'maxwidth'in kw:kw2['maxwidth']=kw['maxwidth'];del kw['maxwidth']
+    if'minheight'in kw:
+        kw2['minheight']=kw['minheight']
+        if'height'not in kw:kw['height']=kw['minheight']
+        del kw['minheight']
+    if'maxheight'in kw:kw2['maxheight']=kw['maxheight'];del kw['maxheight']
+    return kw,kw2
+
 class ResizableFrame(Frame,Resizable):
     def __init__(self, master=None, **kw):
-        kw2={}
-        if'minwidth'in kw:
-            kw2['minwidth']=kw['minwidth']
-            if'width'not in kw:kw['width']=kw['minwidth']
-            del kw['minwidth']
-        if'maxwidth'in kw:kw2['maxwidth']=kw['maxwidth'];del kw['maxwidth']
-        if'minheight'in kw:
-            kw2['minheight']=kw['minheight']
-            if'height'not in kw:kw['height']=kw['minheight']
-            del kw['minheight']
-        if'maxheight'in kw:kw2['maxheight']=kw['maxheight'];del kw['maxheight']
-        
+        kw1,kw2=stripkw(kw)
         Frame.__init__(self,master=master,**kw)
         Resizable.__init__(self,master=master,**kw2)
-
 class ResizableLabelFrame(LabelFrame,Resizable):
     def __init__(self, master=None, **kw):
-        kw2={}
-        if'minwidth'in kw:
-            kw2['minwidth']=kw['minwidth']
-            if'width'not in kw:kw['width']=kw['minwidth']
-            del kw['minwidth']
-        if'maxwidth'in kw:kw2['maxwidth']=kw['maxwidth'];del kw['maxwidth']
-        if'minheight'in kw:
-            kw2['minheight']=kw['minheight']
-            if'height'not in kw:kw['height']=kw['minheight']
-            del kw['minheight']
-        if'maxheight'in kw:kw2['maxheight']=kw['maxheight'];del kw['maxheight']
+        kw1,kw2=stripkw(kw)
         LabelFrame.__init__(self,master=master,**kw)
         Resizable.__init__(self,master=master,**kw2)
 
-class ResizableOmniText(Text):
-    """\
-OmniText is a text widget that is resizable with mouse, can be configured to have a vertical, horizontal or both scrollbars and a custom title
+class ResizableOmniText(OmniText,ContextMenu):
+    """ResizableOmniText is a text widget that can be configured to have a vertical (scrolling=(0,1)), horizontal (scrolling=(1,0)) or both scrollbars (scrolling=(1,1)).
 
-(Options to make the scrollbars disappear automatically when not needed,to move them to the other side of the window,
-to modify ResizableLabelFrame text, minwidth, minheight, maxwidth and maxheight in pre-existing OmniText widget
-via omnitext.configure() instead of omnitext.frame.configure() have not been implemented yet).
+It can also have a title (text=...).
+
+It is now based on ResizableLabelFrame instead of a LabelFrame. This allows you to resize it by dragging bottom edge, right edge or bottom-right corner.
+
+It has a context menu for basic editing functionality (Select all, Cut, Copy, Paste, Delete) as well, which can be
+overriden by replacing make_menu function in a subclass.
+
+It can also have "Copy" and "Clear" buttons, which are useful when using this for an output log (log_buttons=True).
+It can also have a slider for adjusting font size (minfont=..., maxfont=...)
+
+(Options to make the bars disappear automatically when not needed, to move them to the other side of the window
+have not been implemented yet. Undo/Redo has not been implemented either).
 
 Configuration options are passed to the Text widget.
-A ResizableLabelFrame widget is inserted between the master and the text, to hold the Scrollbar widget.
-Most methods calls are inherited from the Text widget; Pack, Grid and Place methods are redirected to the LabelFrame widget.
-    """
-    def __init__(self, master=None, scrolling=(0,0), **kw):
-        kw2={}
-        if'minwidth'in kw:kw2['minwidth']=kw['minwidth'];del kw['minwidth']
-        if'maxwidth'in kw:kw2['maxwidth']=kw['maxwidth'];del kw['maxwidth']
-        if'width'in kw:kw2['width']=kw['width'];del kw['width']
-        if'height'in kw:kw2['height']=kw['height'];del kw['height']
-        if'minheight'in kw:kw2['minheight']=kw['minheight'];del kw['minheight']
-        if'maxheight'in kw:kw2['maxheight']=kw['maxheight'];del kw['maxheight']
+A ResizableLabelFrame widget is inserted between the master and the text, to hold
+the Scrollbar widget.
+Most methods calls are inherited from the Text widget; Pack, Grid and
+Place methods are redirected to the ResizableLabelFrame widget.
+"""
+    def __init__(self, master=None, *, scrolling=(0,0), log_buttons=False, **kw):
+        kw1,kw2=stripkw(kw)
         self.frame = ResizableLabelFrame(master,**kw2)
         if 'text' in kw:
             self.frame.configure(text=kw['text'])
             del kw['text']
+        if 'minfont' in kw or 'maxfont' in kw:
+            try:
+                assert('minfont' in kw)and('maxfont' in kw)
+                minfont=kw.pop('minfont');maxfont=kw.pop('maxfont')
+                if minfont<=0:
+                    raise ValueError(f'Bad minimum font size {minfont}')
+                default=9 if minfont<9<maxfont else (minfont if minfont>9 else (maxfont if maxfont<9 else None))
+                if default is not None:
+                    ZoomScale(self.frame,from_=minfont,to=maxfont,default=default,style='inline',text='Font',command=self.zoomfont).pack(side='top',fill='both',expand=True)
+            except AssertionError:
+                raise TypeError('Wrong number of arguments: expected minfont AND maxfont')
+        if log_buttons:
+            Button(self.frame,text='Clear',command=lambda:self.delete(0.0,'end')).pack(side='bottom', fill='x')
+            Button(self.frame,text=COPY,command=self.copy).pack(side='bottom', fill='x')
         if scrolling[1]!=0:
             self.vbar = Scrollbar(self.frame)
             self.vbar.pack(side='right', fill='y')
@@ -124,24 +141,14 @@ Most methods calls are inherited from the Text widget; Pack, Grid and Place meth
         for m in methods:
             if m[0] != '_' and m != 'config' and m != 'configure':
                 setattr(self, m, getattr(self.frame, m))
-    def __str__(self):
-        return str(self.frame)
-from tk2.omnitext import OmniText
-class ResizableOmniText(OmniText,Resizable):
-    def __init__(self, master=None, **kw):
-        kw2={}
-        if'minwidth'in kw:
-            kw2['minwidth']=kw['minwidth']
-            if'width'not in kw:kw['width']=kw['minwidth']
-            del kw['minwidth']
-        if'maxwidth'in kw:kw2['maxwidth']=kw['maxwidth'];del kw['maxwidth']
-        if'minheight'in kw:
-            kw2['minheight']=kw['minheight']
-            if'height'not in kw:kw['height']=kw['minheight']
-            del kw['minheight']
-        if'maxheight'in kw:kw2['maxheight']=kw['maxheight'];del kw['maxheight']
-        OmniText.__init__(self,master=master,**kw)
-        Resizable.__init__(self,master=master,**kw2)
+        ContextMenu.__init__(self)
+    def config(self,**kw):
+        if 'text'in kw:self.frame.config(text=kw.pop('text'))
+        if'minheight'in kw:self.minheight=kw.pop('minheight')
+        if'maxheight'in kw:self.maxheight=kw.pop('maxheight')
+        if'minwidth'in kw:self.minwidth=kw.pop('minwidth')
+        if'maxwidth'in kw:self.maxwidth=kw.pop('maxwidth')
+        Text.config(self,**kw)
 if __name__ == "__main__":
     from tkinter import Tk,Button
     root=Tk()

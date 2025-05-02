@@ -10,4 +10,5 @@ from tk2.popup import *#popup: class decorator for pop-up hints
 from tk2.resizable import * #ResizableFrame, ResizableLabelFrame, ResizableOmniText: Resizable widgets
 from tk2.scrolledframe import * #ScrolledFrame, ScrolledLabelFrame: Scrollable Frames
 from tk2.togglebutton import * #ToggleButton: A simple toggle button which stores a boolean value; ToggleRadioButton: A toggle button which acts like a RadioButton
+from tk2.zoomscale import *#ZoomScale: A scale for zooming
 #from tk2.panedtable import * # A bad attempt at binding PanedWindows together

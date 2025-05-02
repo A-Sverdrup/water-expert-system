@@ -1,12 +1,13 @@
-"""OmniText is a text widget that can be configured to have a vertical, horizontal or both scrollbars.
+"""OmniText is a text widget that can be configured to have a vertical (scrolling=(0,1)), horizontal (scrolling=(1,0)) or both scrollbars (scrolling=(1,1)).
 
-Since (unlike tkinter's and idlelib's versions of ScrolledText, it relies on LabelFrame instead of a regular Frame,
-it can also have a title (text='...' keyword option in __init__)
+Since, unlike tkinter's and idlelib's versions of ScrolledText, it relies on LabelFrame instead of a regular Frame,
+it can also have a title (text=...).
 
 It has a context menu for basic editing functionality (Select all, Cut, Copy, Paste, Delete) as well, which can be
 overriden by replacing make_menu function in a subclass.
 
-It can also have "Copy" and "Clear" buttons, which are useful when using this for an output log.
+It can also have "Copy" and "Clear" buttons, which are useful when using this for an output log (log_buttons=True).
+It can also have a slider for adjusting font size (minfont=..., maxfont=...)
 
 (Options to make the bars disappear automatically when not needed, to move them to the other side of the window
 have not been implemented yet. Undo/Redo has not been implemented either).
@@ -20,17 +21,32 @@ Place methods are redirected to the LabelFrame widget.
 __all__ = ['OmniText']
 
 from tkinter import Button, LabelFrame, Text, Scrollbar, Pack, Grid, Place
-if __name__ == "__main__":
+from tkinter.font import Font
+if __name__ == "__main__" or __name__ == "omnitext":
     from contextmenu import ContextMenu, COPY
+    from zoomscale import ZoomScale
 else:
     from tk2.contextmenu import ContextMenu, COPY
+    from tk2.zoomscale import ZoomScale
       
 class OmniText(Text,ContextMenu):
-    def __init__(self, master=None, scrolling=(0,0), log_buttons=False, **kw):
+    __doc__=__doc__
+    def __init__(self, master=None, *, scrolling=(0,0), log_buttons=False, **kw):
         self.frame = LabelFrame(master)
         if 'text' in kw:
             self.frame.configure(text=kw['text'])
             del kw['text']
+        if 'minfont' in kw or 'maxfont' in kw:
+            try:
+                assert('minfont' in kw)and('maxfont' in kw)
+                minfont=kw.pop('minfont');maxfont=kw.pop('maxfont')
+                if minfont<=0:
+                    raise ValueError(f'Bad minimum font size {minfont}')
+                default=9 if minfont<9<maxfont else (minfont if minfont>9 else (maxfont if maxfont<9 else None))
+                if default is not None:
+                    ZoomScale(self.frame,from_=minfont,to=maxfont,default=default,style='inline',text='Font',command=self.zoomfont).pack(side='top',fill='both',expand=True)
+            except AssertionError:
+                raise TypeError('Wrong number of arguments: expected minfont AND maxfont')
         if log_buttons:
             Button(self.frame,text='Clear',command=lambda:self.delete(0.0,'end')).pack(side='bottom', fill='x')
             Button(self.frame,text=COPY,command=self.copy).pack(side='bottom', fill='x')
@@ -53,6 +69,9 @@ class OmniText(Text,ContextMenu):
             if m[0] != '_' and m != 'config' and m != 'configure':
                 setattr(self, m, getattr(self.frame, m))
         ContextMenu.__init__(self)
+    def zoomfont(self,size):
+        current_font=Font(font=self.cget("font"))
+        self.config(font=(current_font.actual("family"), size, current_font.actual("slant"), current_font.actual("weight")))
     def config(self,**kw):
         if 'text'in kw:self.frame.config(text=kw.pop('text'))
         Text.config(self,**kw)

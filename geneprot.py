@@ -1,6 +1,6 @@
 if __name__!='__main__':raise ImportError("This program is a standalone software and cannot be imported as module")
 try:
-    from tkinter import Tk,Toplevel,Button,Checkbutton,Entry,Frame,Label,LabelFrame,Menu,PanedWindow,Scrollbar,BooleanVar,StringVar,IntVar
+    from tkinter import Tk,Toplevel,Button,Checkbutton,Entry,Frame,Label,LabelFrame,PanedWindow,PhotoImage,BooleanVar,StringVar,IntVar
     from tkinter.filedialog import askopenfilenames,askdirectory
     from tkinter.messagebox import showerror,showinfo,showwarning,askyesno
     from tkinter.simpledialog import askstring
@@ -11,7 +11,7 @@ except ImportError:
     input('Press Enter to exit.')
     exit(1)
 try:
-    from tk2 import EntryLabel,LabelMenu2,OmniSpin,OmniText,ResizableOmniText,ToggleButton,ToggleRadioButton,OpenFileButton
+    from tk2 import EntryLabel,LabelMenu2,OmniSpin,OmniText,OpenFileButton,ResizableOmniText,ScrolledLabelFrame,ToggleButton,ToggleRadioButton
 except ImportError:
     showerror('Package "tk2" cannot be loaded!','Required library (tk2) is corrupted or missing.\nThe program cannot be run.\n\nPlease check for missing files and/or reinstall the program')
     exit(1)
@@ -44,8 +44,8 @@ except:
         exit()
 from sys import platform
 if platform=='win32':None
-elif platform=='darwin':showwarning('Warning','This program was developed on Windows and was not tested on MacOS.\nYou may encounter previously unknown errors or unintended behaviour.')
-else:showwarning('Warning',f'This program was developed on Windows and was not tested on [{platform}].\nYou may encounter previously unknown errors or unintended behaviour.')
+elif platform=='darwin':showwarning('Warning','This program was developed on Windows and was not tested on MacOS. You may encounter previously unknown errors or unintended behaviour. Please report found issues to https://github.com/A-Sverdrup/water-expert-system/issues')
+else:showwarning('Warning',f'This program was developed on Windows and was not tested on [{platform}]. You may encounter previously unknown errors or unintended behaviour. Please report found issues to https://github.com/A-Sverdrup/water-expert-system/issues')
 import csv
 csv.register_dialect(';', delimiter=';')
 csv.register_dialect('\t', delimiter='\t')
@@ -60,19 +60,24 @@ class TableWrapper(LogPrinter,WrapperStub):
     def body(self,**kw):
         dl=LabelFrame(self.ls,text='Separator')
         dl.grid(row=2,column=0)
-        self.delimiter=LabelMenu2(dl,values={'Tab':'\t','Space':' ',',':',',';':';','|':'|'},default=';',relief='ridge',width=100,border=2)
+        self.delimiter=DCombo2(dl,values={'Tab':'\t','Space':' ',',':',',';':';','|':'|'},width=1)
+        self.delimiter.set(';')
         self.delimiter.pack(fill='both',expand=True)
         self.table=Table(self.container,array=DataFrame([['']*10 for i in range(20)]))
+        self.table.grid(row=1,column=0,sticky='nsew')
         Checkbutton(self.ls,text='Use headers',variable=self.table.header).grid(row=3,column=0)
         return self.table
     def __getitem__(self,key):
         return self.table[key]
     def __setitem__(self,key,value):
         self.table[key]=value
+    def zoom(self,x=None,y=None,f=None):
+        self.table.zoom(x,y,f)
     def load(self,file):
         try:
             self.print(f'Loading {file}...',end=' ')
-            with open(file) as csvfile: array = DataFrame(data = [[number(i)for i in row] for row in csv.reader(csvfile, self.delimiter.get())]).replace(to_replace=None,value='',regex=[None])
+            with open(file) as csvfile:
+                array = DataFrame(data = [[number(i)for i in row] for row in csv.reader(csvfile, self.delimiter.get())]).replace(to_replace=None,value='',regex=[None])
             if self.table.header.get():
                 array.index=['index',*array.index[1:]]
                 array=array.T.set_index('index').T.reset_index(drop=True)
@@ -83,81 +88,6 @@ class TableWrapper(LogPrinter,WrapperStub):
     def save(self,file):
         if self.table.header.get():self.table.array.to_csv(file,sep=self.delimiter.get(),encoding='utf-8',index=False)
         else:self.table.array.to_csv(file,sep=self.delimiter.get(),encoding='utf-8',index=False,header=False)
-##class LeftTable(TableWrapper):
-##    def body(self,**kw):
-##        col=LabelFrame(self.top,text='Columns')
-##        col.grid(row=0,column=2,sticky='nsew')
-##        
-##        tab=TableWrapper.body(self)
-##        self.table.bind('<<resize>>',self.resize)
-##        
-##        self.taxonomy=TaxSpin(col,self.table.W-1)
-##        self.taxonomy.grid(row=0,column=0,rowspan=3)
-##        self.exist=OmniSpin(col,text='Exists',width=4,cnf={'from':0,'to':self.table.W-1})
-##        self.exist.grid(row=0,column=1,padx=10,sticky='nsew')
-##        self.accession=OmniSpin(col,text='Accession',width=4,cnf={'from':0,'to':self.table.W-1})
-##        self.accession.grid(row=1,column=1,padx=10,sticky='nsew')
-##        self.saprobity=OmniSpin(col,text='Saprobity',width=4,cnf={'from':0,'to':self.table.W-1})
-##        self.saprobity.grid(row=2,column=1,padx=10,sticky='nsew')
-##        return self.table
-##    def resize(self,event):
-##        for i in[self.exist,self.accession,self.saprobity]:i['to']=self.table.W-1
-##    def accessions(self):
-##        return self[:,self.accession.get()]
-##    def taxnames(self):
-##        if len(self.taxonomy.get())==2:
-##            taxnames = list(map(lambda a:a[0]+' '+a[1],zip(self[:,self.taxonomy.get()[0]], \
-##                                                           self[:,self.taxonomy.get()[1]])))
-##        else:taxnames = self[:,self.taxonomy.get()[0]]
-##        return taxnames
-##    def saprobities(self):
-##        return self[:,self.saprobity.get()]
-
-##class TableWrapper2(WrapperStub):
-##    format=('Table','*.xlsx *.xls *.ods',(('Electronic tables','*.xlsx *.xls *.ods'),('Microsoft Excel 2007-2021','*.xlsx'),('Microsoft Excel 95-2003','*.xls'),('OpenOffice/LibreOffice','*.ods'),('All files','*')))
-##    def body(self,**kw):
-##        dl=LabelFrame(self.ls,text='Separator')
-##        dl.grid(row=2,column=0)
-##        self.file=None
-##        self.saved=True
-##        self.table=Table(self.container,array=DataFrame([['']*10 for i in range(20)]))
-##        self.table.bind('<<editvalues>>',self.repl)
-##        self.remote=Notebook(self.table,style='TW2.TNotebook')
-##        self.remote.grid(row=self.table.height+2,column=0,columnspan=self.table.width+2,sticky='nsew')
-##        self.sheets=[]
-##        return self.table
-##    def __getitem__(self,key):
-##        return self.table[key]
-##    def __setitem__(self,key,value):
-##        self.table[key]=value
-##    def load(self,file):
-##        for i in range(len(self.remote.tabs())):self.remote.forget(0)
-##        self.sheets=[]
-##        if self.file:
-##            self.remote.unbind('<<NotebookTabChanged>>')
-##            self.file.close()
-##            self.file=None
-##        self.file=ExcelFile(file)
-##        self.names=self.file.sheet_names
-##        for i in range(len(self.file.sheet_names)):
-##            self.remote.add(Frame(self.remote),text=self.file.sheet_names[i])
-##            self.sheets.append(read_excel(self.file, self.file.sheet_names[i], engine='openpyxl'))#self.file.parse(self.file.sheet_names[i]).fillna(''))
-##        self.file.close()
-##        self.file=None
-##        self.table.load(self.sheets[0],file)
-##        self.remote.bind('<<NotebookTabChanged>>',self.flip)
-##    def repl(self,event):
-##        print(self.remote.index("current"),'stoopid!')
-##        self.sheets[self.remote.index("current")]=self.table.array
-##    def flip(self,event):
-##        print('loading')
-##        self.table.load(self.sheets[self.remote.index("current")].fillna(''))
-##        print('loaded')
-##    def save(self,file):
-##        writer=ExcelWriter(file,mode='w')#,if_sheet_exists="replace")
-##        for i in range(len(self.sheets)):
-##            self.sheets[i].to_excel(writer, sheet_name=self.names[i],index=None)
-##        writer.close()
         
 class Downloader:
     def geneprot(self, LIST, mask, offset, fetch, base, pre, main, main2, post, mode, eskw={},efkw={},**kw):
@@ -224,29 +154,12 @@ class Downloader:
         for i in self.controls:i.config(state='disabled')
     def unlock(self):
         for i in self.controls:i.config(state='normal')
-class Middle(Downloader,LabelFrame):
+class Middle(Downloader,PanedWindow):
     DB=DB
     def __init__(self,master,left,right,online):
         self.table=left;self.fasta=right;self.table.printer=self
         for i in self.DB:self.DB[i].printer=self
-        LabelFrame.__init__(self,master=master,text='Toolbox')
-        self.inner=PanedWindow(self,orient='vertical')
-        self.inner.pack(fill='both',expand=True)
-        
-        self.google=Search(self.table.top,'Search in table',{'Any match':'Any','Exact match':'Exact','Use RegEx':'Regex'},'Any',self.query)        
-        self.google.grid(row=0,column=1)
-        #self.inner.add(self.google)
-
-        tzm=LabelFrame(self.table.top,text='Manipulate data')
-        tzm.grid(row=1,column=1)
-        m1=Button(tzm,text='Function',command=self.manipulate1);m1.pack(side='left',fill='x',expand=True)
-        m2=Button(tzm,text='Statistics',command=self.manipulate2);m2.pack(side='left',fill='x',expand=True)
-        m3=Button(tzm,text='Operate',state='disabled');m3.pack(side='left',fill='x',expand=True)
-        
-        a=LabelFrame(self.inner,text='Manage databases')
-        db1=Button(a,text='GB2Taxid',command=self.DB['gb2taxid']);db1.pack(side='left',fill='x',expand=True)
-        db2=Button(a,text='Taxdump',command=self.DB['taxdump']);db2.pack(side='left',fill='x',expand=True)
-        db3=Button(a,text='FASTA',command=self.DB['FDB']);db3.pack(side='left',fill='x',expand=True)
+        PanedWindow.__init__(self,master=master,orient='vertical')
         
         self.debug=BooleanVar(self,value=False)
         self.debugger=LabelFrame(self,text='Debug',relief='ridge')
@@ -255,39 +168,57 @@ class Middle(Downloader,LabelFrame):
         Button(self.debugger,text='Un',command=self.unlock).grid(row=1,column=0)
         self.bind('<Control-Shift-Double-1>',lambda e:(self.debugger.place(x=0,y=0),self.debug.set(True),print('Debug mode enabled!'),"break")[3])
         self.debugger.bind('<Control-Shift-Double-1>',lambda e:(self.debugger.place_forget(),self.debug.set(False),print('Debug mode disabled!'),"break")[3])
-        self.inner.add(a)
         
-        b=LabelFrame(self.inner,text='Automation')
+        tools=LabelFrame(self,text='Tools')
+        tools.rowconfigure((0,1,2,3),weight=1)
+        self.add(tools)
+        
+        self.google=Search(self.table.top,'Search in table',{'Any match':'Any','Exact match':'Exact','Use RegEx':'Regex'},'Any',self.query)        
+        self.google.grid(row=0,column=1)
+
+        tzm=LabelFrame(self.table.top,text='Manipulate data')
+        tzm.grid(row=1,column=1)
+        m1=Button(tzm,text='Function',command=self.manipulate1);m1.pack(side='left',fill='x',expand=True)
+        m2=Button(tzm,text='Statistics',command=self.manipulate2);m2.pack(side='left',fill='x',expand=True)
+        m3=Button(tzm,text='Operate',state='disabled');m3.pack(side='left',fill='x',expand=True)
+        
+        a=LabelFrame(tools,text='Manage databases')
+        db1=Button(a,text='GB2Taxid',command=self.DB['gb2taxid']);db1.pack(side='left',fill='x',expand=True)
+        db2=Button(a,text='Taxdump',command=self.DB['taxdump']);db2.pack(side='left',fill='x',expand=True)
+        db3=Button(a,text='FASTA',command=self.DB['FDB']);db3.pack(side='left',fill='x',expand=True)
+        a.grid(row=0,column=0,sticky='nsew')
+        
+        b=LabelFrame(tools,text='Automation')
         bl=Button(b,text='Run BLAST',state='disabled');bl.pack(side='left',fill='x',expand=True)
         run=Button(b,text='Complete run',state='disabled');run.pack(side='left',fill='x',expand=True)
         rnd=Button(b,text='Bootstrap runs',state='disabled');rnd.pack(side='left',fill='x',expand=True)
         dd=Button(b,text='Deduplicate',command=self.dedup);dd.pack(side='left',fill='x',expand=True)
-        self.inner.add(b)
+        b.grid(row=1,column=0,sticky='nsew')
 ##        bb=LabelFrame(self.inner,text='Deduplicate')
 ##        dd1=Button(bb,text='Reads',command=self.dedup1);dd1.pack(side='left',fill='x',expand=True)
 ##        dd2=Button(bb,text='accessions',command=self.dedup2);dd2.pack(side='left',fill='x',expand=True)
 ##        dd3=Button(bb,text='taxids',command=self.dedup3);dd3.pack(side='left',fill='x',expand=True)
 ##        self.inner.add(bb)
         
-        c=LabelFrame(self.inner,text='FASTA Tasks')
+        c=LabelFrame(tools,text='FASTA Tasks')
         rn=Button(c,text='Rename',state='disabled');rn.pack(side='left',fill='x',expand=True)
         mg=Button(c,text='Merge',state='disabled');mg.pack(side='left',fill='x',expand=True)
         ft=Button(c,text='Put into table',command=self.storefasta);ft.pack(side='left',fill='x',expand=True)
-        self.inner.add(c)
+        c.grid(row=2,column=0,sticky='nsew')
         
-        d=LabelFrame(self.inner,text='NCBI tasks'if online else'Offline tasks')
+        d=LabelFrame(tools,text='NCBI tasks'if online else'Offline tasks')
         Label(d,text='Get taxonomy data').grid(row=0,column=0,sticky='nsew')
         tax1=Button(d,text='Offline',command=self.offlinetaxonomy);tax1.grid(row=0,column=1,sticky='nsew')
         tax2=Button(d,text='Online',command=self.onlinetaxonomy,state='normal'if online else'disabled');tax2.grid(row=0,column=2,sticky='nsew')
         Label(d,text='Get sequence data').grid(row=1,column=0,sticky='nsew')
-        seq1=Button(d,text='Offline',state='disabled',command=self.offlinedownload);seq1.grid(row=1,column=1,sticky='nsew')
+        seq1=Button(d,text='Offline',command=self.offlinedownload);seq1.grid(row=1,column=1,sticky='nsew')
         seq2=Button(d,text='Online',command=self.onlinedownload,state='normal'if online else'disabled');seq2.grid(row=1,column=2,sticky='nsew')
         self.controls=[m1,m2,#m3,
                        db1,db2,db3,
                        #bl,run,rnd,
                        dd,#rn,mg,
                        ft,
-                       tax1,#seq1
+                       tax1,seq1
                        ]
         if not online:
             Label(status,text='Package "bio" is unavailable!',relief='raised',state='disabled',height=7).grid(row=2,column=0,columnspan=3,sticky='nsew')
@@ -296,18 +227,18 @@ class Middle(Downloader,LabelFrame):
             self.controls.append(seq2)
         d.columnconfigure((0,1,2), weight=1)
         d.rowconfigure((0,1)if online else(0,1,2), weight=1)
-        self.inner.add(d)
+        d.grid(row=3,column=0,sticky='nsew')
         
-        status=LabelFrame(self.inner,text='Job status')
-        self.inner.add(status)
+        status=LabelFrame(self,text='Job status')
         grid=Frame(status);grid.pack(fill='x',expand=True)
-        self.dashboard=Dashboard(status,orient='horizontal');self.dashboard.pack(fill='x',expand=True)
+        self.dashboard=Dashboard(status,orient='horizontal');self.dashboard.pack(fill='both',expand=True)
         self.stopped=ToggleButton(status,text='Emergency STOP',border=4,bg='red',value=False)
-        self.stopped.pack(side='left',fill='x',expand=True)
+        self.stopped.pack(side='left',fill='both',expand=True)
         self.stopped.trace_add('write',self.stop)
+        self.add(status)
         
-        self.text=OmniText(self.inner,text='Log',scrolling=(1,1),width=40,height=16,log_buttons=True,font=('Courier New',7))
-        self.inner.add(self.text)
+        self.text=OmniText(self,text='Log',scrolling=(1,1),width=40,height=16,log_buttons=True,font=('Courier New',7))
+        self.add(self.text)
     def storefasta(self):
         if xy:=whereto('Put FASTA in table','Where to?',(self.table.table.H-1,self.table.table.W-1),'xy'):self.table[*xy]=self.fasta.text.get('1.0','end').rstrip()
     def query(self):
@@ -320,7 +251,7 @@ class Middle(Downloader,LabelFrame):
                 if {'Any':lambda q,s:(q in s),
                     'Exact':lambda q,s:q==s,
                     'Regex':lambda q,s:bool(search(q,s))}[mode](query,col[j]):
-                    self.text.insert('end','Found %s at column %s, row %s\n'%(query, i, j));self.text.see('end')
+                    self.print('Found %s at column %s, row %s\n'%(query, i, j))
                     found=True
         if not found:self.text.insert('end','%s was not found in table'%query)
     def getspin(self):return{'width':4,'cnf':{'from':0,'to':self.table.table.W-1}}
@@ -680,28 +611,36 @@ class Middle(Downloader,LabelFrame):
                             setio('Outputs',{'FASTA':(Constant,[],{'title':'FASTA','prompt':'<text output>','state':'disabled'})},validate=None),validate=None)      
         if self.debug.get():print(io)
         elif io:
+            self.lock()
             self.print('Running offline fetch sequence job...')
             self.cpr()
-            mask=((self.table[:,io[0]['Filter']])if(io[0]['Filter'])else None)
-            lst=self.table[:,io[0]['Accession']]
+            LIST=self.table[:,io[0]['Accession']]
+            mask=self.getio(io,'Filter')
+            f=d=0
+            offset=0
+            t=time()
+            l=len(LIST)
+            if mask is None:mask=[True]*l
+            l2=sum([bool(i)for i in mask])-offset
+            self.dashboard.config(all=f'{l} ({l2} to do)')
+            
             fas=io[0]['FASTA']
             print(fas)
-            print(zindex:=self.DB['FDB'].zindex[fas])
-            print(asvindex:=[i[:i.index(' ')]for i in zindex])
-            
-            for i in range(len(lst)):
-                if mask[i]:
-                    try:
-                        self.text.insert('end',self.DB['FDB'][fas,[*zindex][asvindex.index(lst[i])]])
-                    except:
-                        #if lst[i][-2]=='.':
-                        print('not in asv')
-                        #try:
-                        #    self.text.insert('end',self.DB['FDB'][fas,[*zindex][asvindex.index(lst[i][:-2])]])
-                        #except:print('not in as')
-            #self.geneprot(LIST=self.table[:,io[0]['Accession']], mask=mask, offset=0, fetch=True, pre=self.skip, main=self.skip, main2=self.main, post=self.skip,
-            #          base={'GenBank':'nuccore','GenPept':'protein'}[self.base.get()],
-            #          eskw={'retmax':3},efkw={'rettype':'fasta','retmode':'text'})
+            zindex=self.DB['FDB'].zindex[fas]
+            try:
+                for i in range(l):
+                    if mask[i]:
+                        try:
+                            self.fasta.text.insert('end',self.DB['FDB'][fas,LIST[i]]);d+=1
+                        except KeyError:
+                            f+=1;self.print(f'{i}/{l}: fail (not found in reference)')
+                        self.cpr()
+                        T=int(time()-t)
+                        T2=(int(T*(l-i)/(i)))if i!=0 else 0
+                        self.dashboard.config(done=d,fail=f,left=l2-d,elapsed=f'{T//86400}d {(T//3600)%24:02.0f}:{(T//60)%60:02.0f}:{T%60:02.0f}',ETA=f'{T2//86400}d {(T2//3600)%24:02.0f}:{(T2//60)%60:02.0f}:{T2%60:02.0f}')
+            except KeyboardInterrupt:
+                self.print('\nOperation successfully interrupted\n')
+            self.unlock()
             self.ding(auto)
     def onlinedownload(self,io=None,auto=False):
         def verify2(io):
@@ -745,7 +684,7 @@ class FastaWrapper(WrapperStub):
     format=FASTA
     DB=DB
     def body(self,**kw):
-        self.text=ResizableOmniText(self.container,scrolling=(0,1),minwidth=400,minheight=200,font=('Courier New',7),**kw)
+        self.text=ResizableOmniText(self.container,scrolling=(0,1),minwidth=400,minheight=200,minfont=1,maxfont=18,**kw)
         self.google=Search(self.top,'Search in FASTA',{'Headers':'Headers','Sequences':'Sequences','Any':'Any'},'Headers',self.query)        
         self.google.grid(row=0,column=2,sticky='nsew')
         self.searchpos=1.0
@@ -757,10 +696,15 @@ class FastaWrapper(WrapperStub):
         if pos:
             row, col = pos.split('.')
             end='%s.%s'%(row,int(col)+len(text))
-            self.text.tag_remove('sel',1.0,'end')
-            self.text.see(pos)
-            self.text.tag_add('sel', pos, end)
-            self.searchpos = end
+            header=(self.text.get(f'{row}.0',f'{row}.1')=='>')
+            if self.google.mode.get()=='Headers'and not header:self.searchpos = end;self.query()
+            elif self.google.mode.get()=='Sequences'and header:self.searchpos = end;self.query()
+            else:
+                self.text.tag_remove('sel',1.0,'end')
+                self.text.see(pos)
+                self.text.tag_add('sel', pos, end)
+                self.searchpos = end
+        elif self.searchpos == 1.0:self.bell()
         else:
             self.searchpos = 1.0
             self.query()
@@ -771,7 +715,8 @@ class FastaWrapper(WrapperStub):
             self.text.frame.config(text=file)
     def save(self,file):
         with open(file,'w')as f:f.write(self.send())
-        if file in self.DB['FDB'].names:self.DB['FDB'].rebuild(file)
+        if file in self.DB['FDB'].names:
+            self.DB['FDB'].reload(file)
     def receive(self,payload,*,inner=False):
         self.text.delete(1.0,'end')
         self.text.insert(1.0,payload)
@@ -809,7 +754,7 @@ class FastaTableWrapper(FastaWrapper):
         trim.grid(row=0,column=0)
         
         if'font'not in kw:kw['font']=('Courier New',7)
-        self.text=ResizableOmniText(self.frame,scrolling=(0,1),minwidth=400,minheight=200,**kw)
+        self.text=ResizableOmniText(self.frame,scrolling=(0,1),minwidth=400,minheight=200,minfont=1,maxfont=18,**kw)
         self.google=Search(self.top,'Search in FASTA',{'Headers':'Headers','Sequences':'Sequences','Any':'Any'},'Headers',self.query)        
         self.google.grid(row=0,column=4)
         self.searchpos=1.0
@@ -834,11 +779,13 @@ class FastaTableWrapper(FastaWrapper):
                                 'Num_Lock','Caps_Lock','Scroll_Lock','Pause','Insert']) \
                ):
             #global events;print(event);events.append(event)
-            try:
-                text=self.send()
-                if not set(text).issubset({' ','\n'}):
-                    self.table.load(DataFrame([['>'+i[0],*list(''.join(i[1:]))]for i in [[j for j in i.splitlines()if j]for i in text.split('>') if i]]).set_index(0).fillna(""),None)
-            except Exception as E:showerror('Error!',str(E))
+            text=self.send()
+            if not set(text).issubset({' ','\n'}):
+                try:self.table.load(DataFrame([['>'+i[0],*list(''.join(i[1:]))]for i in [[j for j in i.splitlines()if j]for i in text.split('>') if i]]).set_index(0).fillna(""),None)
+                except IndexError:
+                    try:self.table.load(DataFrame([['>'+i[0],[]]for i in [[j for j in i.splitlines()if j]for i in text.split('>') if i]]).set_index(0).fillna(""),None)
+                    except IndexError:self.table.load(DataFrame([['>',[]]for i in [[j for j in i.splitlines()if j]for i in text.split('>') if i]]).set_index(0).fillna(""),None)
+                except Exception as E:showerror('Error!',str(type(E))+':'+str(E))
     def switch(self,*a):
         if self.mode.get():
             self.syncttv()
@@ -976,7 +923,7 @@ def consensusIUPAC(array,ignore=False,title=''):
         nuc={**{'':'-','-':'-','A':'A','T':'T','C':'C','G':'G'},**{sub[i]:i for i in sub}}
         s=''.join(sorted(set(col)))
         for i in(sub2:={**sub,**{'U':'T'},**({'-':'','?':''}if ignore else{})}):s=s.replace(i,sub2[i])
-        print(''.join(sorted(set(s))))
+        #print(''.join(sorted(set(s))))
         constr+=nuc.get(''.join(sorted(set(s))),'?')
     return '\n>IUPAC%% Consensus %s\n%s'%(title,constr)
 counter=1
@@ -1060,6 +1007,130 @@ class Bulker(Downloader,WrapperStub):
         self.geneprot(LIST=self.LIST, mask=None, offset=int(self.chunkoff.get())*10**int(self.chunksize.get()), fetch=True, mode='r',
                       pre=self.pre, main=self.skip,main2=self.main, post=self.post, base={'GenBank':'nuccore','GenPept':'protein'}[self.base.get()],
                       eskw={'retmax':3},efkw={'rettype':'fasta','retmode':'text'})
+class ClusterFAC(LabelFrame):
+    DB=DB
+    def __init__(self,master,tree,**kw):
+        LabelFrame.__init__(self,master=master,text='ClusterFAC',**kw)
+        self.tree=tree
+        self.tree.bind('<<loadvalues>>',self.updtree)
+        window=PanedWindow(self,orient='vertical')
+        window.pack(fill='both',expand=True)
+        
+        self.lists=ScrolledList(window,text='Clusters')
+        self.lists.on_select=self.switch;self.lists.on_double=self.add;self.lists.on_delete=self.deletecl
+        self.lists.append('Cluster 1')
+        self.lists.append('Add...')
+        window.add(self.lists.frame)
+        window.add(Button(self,text='Confirm split FASTA for consensus',command=self.offlinedownload))
+        window2=PanedWindow(window,orient='horizontal')
+        window.add(window2)
+        
+        self.defaultlist=ScrolledList(window2,text='Tree')
+        self.defaultlist.on_select=self.skip;self.defaultlist.on_double=self.skip;self.defaultlist.on_delete=self.skip;#self.defaultlist.make_menu=
+        window2.add(self.defaultlist.frame)
+        
+        bf=Frame(window2)
+        prefix='R0lGODlhEAAQAHAAACwAAAAAEAAQAIH///8AAAAAAAAAAAAC'
+        self.images=[None,PhotoImage(data=prefix[:-18]+'EAAAD///8AAAAAAAACKkSOYXmw6ZiKkCJnZ8aWP7+AjQga5YmmnsaxlOhe7bhh1UMz2SjhlxQoAAA7'),None,
+                     PhotoImage(data=prefix+'IIRvgcuhDN2DSE4K7NRcpt5l4EiWoGhiqKOuLfqKcQYVADs='),None,
+                     PhotoImage(data=prefix+'IoQPgbuhzNyDR05qb8zcpQ6G4qiQkmFOGYVYbOu9lfbSRgEAOw=='),None,
+                     PhotoImage(data=prefix+'KoQPgacbjZ6TkZpnE2YY9vaBnzaG5omiZLdurchecVtlswzhi7ZnzJ4oAAA7'),None]
+        self.commands=[None,self.allright,None,self.right,None,self.left,None,self.allleft,None]
+        for i in range(len(self.images)):(Button if i%2 else Label)(bf,height=16 if i%2 else 2,image=self.images[i],command=self.commands[i]).grid(row=i,column=0,sticky='ns')
+        window2.add(bf)
+        
+        self.currentlist=ScrolledList(window2,text='Cluster 1')
+        self.currentlist.on_select=self.skip;self.currentlist.on_double=self.skip;self.currentlist.on_delete=self.left
+        window2.add(self.currentlist.frame)
+        
+        self.flat=[]
+        self.default=[]
+        self.clusters=[[]]
+        self.pointer=0
+    def updtree(self,event):
+        self.tree.tree.trace_add('write',self.updlist)
+    def switch(self,index):
+        if self.lists.get(index)!='Add...':
+            self.pointer=index
+            self.currentlist.clear()
+            self.currentlist.config(text=self.lists.get(index))
+            for i in self.clusters[index]:
+                self.currentlist.append(i[1])
+    def add(self,index):
+        if self.lists.get(index)=='Add...':
+            self.clusters.append([])
+            self.lists.insert(index,f'Cluster {index+1}')
+    def deletecl(self,index):
+        self.lists.delete(index)
+        del self.clusters[index]
+    def skip(self,*a):None
+    def allright(self,*a):
+        for i in range(len(self.default)):self.right(i)
+    def allleft(self,*a):
+        for i in range(len(self.default)):self.left(0)
+    def right(self,index=None):
+        if index is None:index=self.defaultlist.index("active")
+        cluster=self.clusters[self.pointer]
+        data=self.default[index]
+        if data not in cluster:cluster.append(data)
+        cluster.sort(key=lambda a:a[0])
+        self.currentlist.insert(cluster.index(data),data[1])
+    def left(self,index=None):
+        if index is None:index=self.currentlist.index("active")
+        del self.clusters[self.pointer][index]
+        self.currentlist.delete(index)
+    def updlist(self,*a):
+        self.defaultlist.clear()
+        self.default.clear()
+        for i in range(len(self.tree.tree.flat)):
+            if self.tree.state[i]:
+                self.defaultlist.append(self.tree.tree.flat[i])
+                self.default.append((i,self.tree.tree.flat[i]))
+    def offlinedownload(self,io=None,auto=False):
+        if not auto:io=askio('Get sequences offline','Select columns:',
+                            setio('Inputs',{'FASTA':(DCombo,[],{'text':'Reference FASTA','values':self.DB['FDB'].names})},validate=all),
+                            setio('Outputs',{'FASTA':(Constant,[],{'title':'FASTA','prompt':'<text output>','state':'disabled'})},validate=None),validate=None)      
+        if self.debug.get():print(io)
+        elif io:
+            self.lock()
+            self.print('Running offline fetch sequence job...')
+            self.cpr()
+            for LIST in self.clusters:
+                S=''
+                f=d=0
+                offset=0
+                t=time()
+                l=len(LIST)
+                if mask is None:mask=[True]*l
+                l2=sum([bool(i)for i in mask])-offset
+                self.dashboard.config(all=f'{l} ({l2} to do)')
+                
+                fas=io[0]['FASTA']
+                print(fas)
+                zindex=self.DB['FDB'].zindex[fas]
+                try:
+                    for i in range(l):
+                        if mask[i]:
+                            try:
+                                S+=self.DB['FDB'][fas,LIST[i]]
+                            except KeyError:
+                                f+=1;self.print(f'{i}/{l}: fail (not found in reference)')
+                            self.cpr()
+                            T=int(time()-t)
+                            T2=(int(T*(l-i)/(i)))if i!=0 else 0
+                            self.dashboard.config(done=d,fail=f,left=l2-d,elapsed=f'{T//86400}d {(T//3600)%24:02.0f}:{(T//60)%60:02.0f}:{T%60:02.0f}',ETA=f'{T2//86400}d {(T2//3600)%24:02.0f}:{(T2//60)%60:02.0f}:{T2%60:02.0f}')
+                    showfasta(S)
+                except KeyboardInterrupt:
+                    self.print('\nOperation successfully interrupted\n')
+            self.unlock()
+            self.ding(auto)
+    def save(self,file):
+        with open(file,'w')as f:f.write(self.send())
+        if file in self.DB['FDB'].names:self.DB['FDB'].rebuild(file)
+    def receive(self,payload,*,inner=False):
+        self.text.delete(1.0,'end')
+        self.text.insert(1.0,payload)
+    def send(self):return self.text.get(1.0,'end')
 
 def rebuild():
     io=askcustom('Rebuild GB2Taxid','''\
@@ -1073,56 +1144,6 @@ If you want to continue, please make sure that:''',
                       '5':(DBool,[],{'type':'check','default':False,'justify':'left','value':True,'prompt':'There are no users planning to use this computer in the next 18-24 hours'}),
                       '6':(DBool,[],{'type':'check','default':False,'justify':'left','value':True,'prompt':'At least 24 GB of free disk space is available'}),
                       },'validate':all}))
-    if False:
-        from os import remove
-        from os.path import getsize
-        from zipfile import ZipFile
-        print('loading...',end='')
-        f=open('D:/SMB/taxonomy ncbi/nucl_gb.accession2taxid')
-        print('done')
-        f.read(38)
-        if f.readline()=='accession\taccession.version\ttaxid\tgi\n':print('header')
-        fl={}
-        n=0
-        print('processing...')
-        while (l:=f.readline()):
-            s=l.split('\t')
-            if s[0][:2] not in fl:
-                fl[s[0][:2]]=open('gb2taxid/'+s[0][:2],'w')
-                fl[s[0][:2]].write(s[0]+';'+s[2]+'\n')
-                fl[s[0][:2]].close()
-            elif fl[s[0][:2]].closed:
-                fl[s[0][:2]]=open('gb2taxid/'+s[0][:2],'a')
-                fl[s[0][:2]].write(s[0]+';'+s[2]+'\n')
-                fl[s[0][:2]].close()
-            else:print('bruh')
-            n+=1
-            if n<1000000:
-                if n<100000:
-                    if n<10000:
-                        if n<1000:
-                            if n<100:
-                                if n<10:print(n)
-                                elif n%10==0:print(n)
-                            if n%100==0:print(n)
-                        if n%1000==0:print(n)
-                    if n%10000==0:print(n)
-                if n%100000==0:print(n)
-            elif n%1000000==0:print(n)
-        print('done')
-        print('zipping...')
-        z=ZipFile('gb2taxid/gb2taxid.zip','w',8)
-        n=0
-        l=len([*fl])
-        for i in fl:
-            z.write('gb2taxid/'+i,i)
-            n+=1
-            print(f'{n}/{l}')
-        z.close()
-        print('done')
-        print('cleaning up...')
-        for i in fl:remove('gb2taxid/'+i)
-        print('done')
 
 
 tk=Tk()
@@ -1138,7 +1159,7 @@ ui2=Notebook(tk)
 ui2.pack(fill='both',expand=True)
 
 page1=PanedWindow(ui2,orient='horizontal')
-fasta=FastaWrapper(page1,'GeneProt',width=300)
+fasta=FastaWrapper(page1,'GeneProt',text='FASTA',font=('Courier New',7),width=300)
 table=TableWrapper(page1,'Table')
 DB['db']=db=DatabaseProvider(tk)
 DB['gb2taxid']=gb2tax=GB2TaxIdProvider(db)
@@ -1152,20 +1173,29 @@ page1.add(fasta)
 
 page2=FastCons(tk,'FastCons',font=('Courier New',8),width=800,height=400)
 
-if online:page3=Bulker(tk,'Very Large Bulk Downloader',width=800,height=400)
-else:page3=Label(ui2,text='Package "bio" is unavailable!',width=80,height=30,relief='raised',state='disabled')
+page3=PanedWindow(ui2,orient='horizontal')
+tree=TreeWrapper(page3,'TreeView')
+cluster=ClusterFAC(page3,tree)
+page3.add(tree)
+page3.add(cluster)
+
+if online:page4=Bulker(tk,'Very Large Bulk Downloader',width=800,height=400)
+else:page4=Label(ui2,text='Package "bio" is unavailable!',width=80,height=30,relief='raised',state='disabled')
 
 #tab2=TableWrapper2(ui2,'Excel test')
 ui2.add(page1,text='GeneProt')
 #ui2.add(tab2,text='EXCELlent')
 ui2.add(page2,text='FastCons')
-ui2.add(page3,text='VLB')
+ui2.add(page3,text='TreeView')
+ui2.add(page4,text='VLB')
 radio=Transceiver()
 radio.instance(fasta)
 radio.instance(page2)
-radio.instance(FDB)
+radio.instance(FDB,1,0)
 
 load.destroy()
 tk.deiconify()
-#exec(open('deacftpo.py').read())
+from os.path import exists
+if exists('default.zlist'):FDB.open('default.zlist')
+exec(open('deacftpo.py').read())
 tk.mainloop()

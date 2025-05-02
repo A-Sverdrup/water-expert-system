@@ -4,13 +4,13 @@ from tkinter import Frame, Entry, Label, StringVar, Pack, Grid, Place
 
 class EntryLabel(Entry):
     '''A label which can be edited upon double-click'''
-    def __init__(self, master=None, text=None, cnf={}, **kw):
+    def __init__(self, master=None, text=None, **kw):
         self.frame=Frame(master)
         self.variable=StringVar(self.frame,value=text)
         Entry.__init__(self, master=self.frame, textvariable=self.variable)
         self.pack_=self.pack
         self.pack_forget_=self.pack_forget
-        self.label=Label(self.frame, cnf=cnf, textvariable=self.variable, **kw)
+        self.label=Label(master=self.frame, textvariable=self.variable, **kw)
         self.label.pack(side='left',fill='both',expand=True)
         self.label.bind('<Double-1>',self.open)
         for i in ['<Return>','<Escape>','<FocusOut>']:
@@ -25,6 +25,10 @@ class EntryLabel(Entry):
         self.get=self.variable.get
         self.set=self.variable.set
         self.trace_add=self.variable.trace_add
+    def config(self,**kw):
+        Entry.config(self,**kw)
+        #if 'font' in kw and kw['font'][0]==None:kw['font']=(self.label.cget('font'),kw['font'][1])
+        self.label.config(**kw)
     def open(self,event):
         self.label.pack_forget()
         self.config(width=len(str(self.get())))
@@ -38,7 +42,7 @@ class EntryLabel(Entry):
         if self.closed==False:self.event_generate('<<close>>');self.closed=True
 
 class LabelEntry(Label):
-    '''An simpler less laggy EntryLabel'''
+    '''An simpler, presumably less laggy EntryLabel'''
     def __init__(self, master=None, text=None, **kw):
         self.variable=StringVar(master,value=text)
         Label.__init__(self, master=master, textvariable=self.variable)
@@ -49,6 +53,9 @@ class LabelEntry(Label):
         self.get=self.variable.get
         self.set=self.variable.set
         self.trace_add=self.variable.trace_add
+    def config(self,**kw):
+        Label.config(self,**kw)
+        self.entry.config(**kw)
     def open(self,event):
         self.entry.pack(side='left',fill='both',expand=True)
         self.config(width=len(str(self.get())))
@@ -61,5 +68,7 @@ class LabelEntry(Label):
 if __name__ == "__main__":
     test=EntryLabel(text='EntryLabel (double-click me!)')
     test.pack(padx=10,pady=10)
+    test2=EntryLabel(text='LabelEntry (double-click me!)')
+    test2.pack(padx=10,pady=10)
     test.mainloop()
 

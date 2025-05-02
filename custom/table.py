@@ -1,8 +1,11 @@
-from tkinter import Button,Label,LabelFrame,Menu,Scrollbar,BooleanVar
+from tkinter import Button,Frame,Label,LabelFrame,Menu,PhotoImage,Scale,Scrollbar,BooleanVar,Pack,Grid,Place
 from tkinter.simpledialog import _QueryDialog
-from pandas import DataFrame
+from tkinter.messagebox import showinfo
+from pandas import DataFrame,concat
 from math import log,e
-from tk2 import EntryLabel,OmniSpin
+from tk2.entrylabel import EntryLabel
+from tk2.omnispin import OmniSpin
+from tk2.zoomscale import ZoomScale
 __all__=['ops','isnan','isnum','Table','FastaTable','number','whereto']
 ######################################ops ######################################
 NaN=float('nan')
@@ -139,16 +142,21 @@ class FastaTableButton(TableButton):
 class Table(LabelFrame):
     width=10
     height=16
+    minwidth=2
+    minheight=5
+    maxwidth=20
+    maxheight=50
     def __init__(self,master=None,array=None,header=False,**kw):
         LabelFrame.__init__(self,master=master,**kw)
         self.vbar=Scrollbar(self,command=self.vscroll)
         self.hbar=Scrollbar(self,orient='horizontal',command=self.hscroll)
-        self.hbar.grid(row=self.height+1,column=1,columnspan=self.width,sticky='nsew')
-        self.vbar.grid(row=1,column=self.width+1,rowspan=self.height,sticky='nsew')
+        self.zoomy=ZoomScale(self,from_=self.minheight,to=self.maxheight,default=self.height,style='inline',text='Rows',font=(None,6),orient='vertical',command=lambda y:self.zoom(None,y))
+        self.zoomx=ZoomScale(self,from_=self.minwidth,to=self.maxwidth,default=self.width,style='inline',text='Cols',command=lambda x:self.zoom(x))
+        self.zoomf=ZoomScale(self,from_=1,to=14,default=8,style='inline',text='Font',command=lambda f:self.zoom(None,None,f))
         self.bind("<Enter>", self._bind_mouse)
         self.bind("<Leave>", self._unbind_mouse)
-        self.columnconfigure(tuple(range(self.height)), weight=1)
-        self.rowconfigure(tuple(range(self.width)), weight=1)
+        self.columnconfigure(tuple(range(self.width+1)), weight=1)
+        self.rowconfigure(tuple(range(self.height+2)), weight=1)
         self.header=BooleanVar(self,value=header)
         self.create_ui()
         self.W=self.H=self.w=self.h=self.X=self.Y=0
@@ -168,11 +176,11 @@ class Table(LabelFrame):
         if event.num == 4 or event.delta > 0:func("scroll",'-1')
         elif event.num == 5 or event.delta < 0:func("scroll",'1')
     def create_ui(self):
-        self.Array=[[EntryLabel(self,relief='groove',height=1)for y in range(self.height)]for x in range(self.width)]
-        self.rulerY=[TableRowButton(self,'row',y,{'insert':self.insertrow,'delete':self.deleterow,'copy':self.copyrow,'head':self.head,'clear':lambda n:self.fillrow(n,""),'default':None},height=1)for y in range(self.height)]
+        self.Array=[[EntryLabel(self,relief='groove',height=1)for y in range(self.maxheight)]for x in range(self.maxwidth)]
+        self.rulerY=[TableRowButton(self,'row',y,{'insert':self.insertrow,'delete':self.deleterow,'copy':self.copyrow,'head':self.head,'clear':lambda n:self.fillrow(n,""),'default':None},height=1)for y in range(self.maxheight)]
         self.rulerX=[TableColumnButton(self,'column',x,{'insert':self.insertcol,'delete':self.deletecol,'copy':self.copycol,'shrink':self.shrink,'rename':self.rename,
                                                         'fill0':lambda n:self.fill(n,0),'fill1':lambda n:self.fill(n,1),'clear':lambda n:self.fill(n,""),
-                                                        'default':'shrink'})for x in range(self.width)]
+                                                        'default':'shrink'})for x in range(self.maxwidth)]
     def load(self,array,file=None):
         #if len(array)*len(array.T):
         self.array=self.preload(array)
@@ -189,12 +197,18 @@ class Table(LabelFrame):
         for i in self.rulerX:i.grid_forget()
         for i in self.rulerY:i.grid_forget()
         for x in range(self.w):
-            self.rulerX[x].grid(row=0,column=x+1,sticky='nsew')
+            self.rulerX[x].grid(row=1,column=x+1,sticky='nsew')
         for y in range(self.h):
-            self.rulerY[y].grid(row=y+1,column=0,sticky='nsew')
+            self.rulerY[y].grid(row=y+2,column=0,sticky='nsew')
             for x in range(self.w):
-                self.Array[x][y].grid(row=y+1,column=x+1,sticky='nsew')
+                self.Array[x][y].grid(row=y+2,column=x+1,sticky='nsew')
                 self.Array[x][y].bind('<<close>>',(lambda a,b:lambda e:self.update_array(a,b))(x,y))
+        self.hbar.grid(row=self.height+2,column=1,columnspan=self.width,sticky='nsew')
+        self.vbar.grid(row=2,column=self.width+1,rowspan=self.height,sticky='nsew')
+        self.zoomy.grid(row=1,column=self.width+2,rowspan=self.height+2,sticky='nsew')
+        self.zoomx.grid(row=self.height+3,column=0,columnspan=self.width+2,sticky='nsew')
+        self.zoomf.grid(row=0,column=0,columnspan=self.width+2,sticky='nsew')
+        self.rowconfigure(tuple(range(self.height+2)), weight=1)
     def update_array(self,x,y,val=None):
         if not val:
             val=self.Array[x][y].get()
@@ -247,10 +261,10 @@ class Table(LabelFrame):
     def deleterow(self,y):
         self.array = concat([self.array.iloc[0:y,:], self.array.iloc[y+1:, :]], axis=0).reset_index(drop=True)
         self.event_generate('<<editvalues>>');self.update_table()
-    def update_size(self):
+    def update_size(self,force=False):
         W=len(self.array.T)
         H=len(self.array)
-        if not((W==self.W)and(H==self.H)):
+        if force or(not((W==self.W)and(H==self.H))):
             self.w=min(W,self.width)
             self.h=min(H,self.height)
             self.W=W
@@ -263,8 +277,8 @@ class Table(LabelFrame):
         else:self.vbar.set(0,1)
         if self.W:self.hbar.set(self.X/self.W,(self.X+self.width)/self.W)
         else:self.hbar.set(0,1)
-    def update_table(self,event=None):
-        self.update_size()
+    def update_table(self,event=None,force=False):
+        self.update_size(force=force)
         for x in range(self.w):
             self.rulerX[x].config(text='%s: %s'%(x+self.X,list(self.array.T.index)[x+self.X]),number=x+self.X)
         for y in range(self.h):
@@ -303,7 +317,17 @@ class Table(LabelFrame):
     def __setitem__(self,key,value):
         self.array.iloc[*key]=value
         self.event_generate('<<editvalues>>');self.update_table()
-
+    def zoom(self,x=None,y=None,f=None):
+        if x is not None:self.width=x
+        if y is not None:self.height=y
+        if bool(x)or bool(y):
+            self.update_table(force=True)
+        if f is not None:
+            for i in range(len(self.Array)):
+                for j in range(len(self.Array[i])):
+                    self.Array[i][j].config(font=(None,f))
+            for i in self.rulerX:i.config(font=(None,f))
+            for i in self.rulerY:i.config(font=(None,f))
 a={'afilmvj':'yellow','c':'khaki','de':'red','g':'purple1','h':'cyan','kpr':'DeepSkyBlue','nqstw':'lime','x':'grey','y':'YellowGreen','?.- ':'white'}
 COLOR_PROTEIN={**{j:a[i] for i in a for j in i},**{j.upper():a[i] for i in a for j in i}}
 a={'a':'lime','c':'DeepSkyBlue','tu':'red','g':'purple1','nx':'grey','?-. ':'white'}
@@ -328,14 +352,18 @@ class FastaColorEntry(EntryLabel):
 class FastaTable(Table):
     width=40
     height=20
+    maxwidth=20
+    maxheight=10
+    maxwidth=80
+    maxheight=50
     def preload(self,array):return array.T.reset_index(drop=True).T
     def create_ui(self):
         self.protein=BooleanVar(value=False)
-        self.Array=[[FastaColorEntry(self,self.protein,font=(None,7),relief='flat')for y in range(self.height)]for x in range(self.width)]
-        self.rulerY=[FastaTableButton(self,'row',y,{'insert':self.insertrow,'delete':self.deleterow,'show':self.showy,'rename':self.rename,'default':'show'},font=(None,7))for y in range(self.height)]
-        self.rulerX=[FastaTableButton(self,'column',x,{'insert':self.insertrow,'delete':self.deleterow,'show':self.showx,'default':'show'},font=(None,7))for x in range(self.width)]
+        self.Array=[[FastaColorEntry(self,self.protein,font=(None,7),relief='flat')for y in range(self.maxheight)]for x in range(self.maxwidth)]
+        self.rulerY=[FastaTableButton(self,'row',y,{'insert':self.insertrow,'delete':self.deleterow,'show':self.showy,'rename':self.rename,'default':'show'},font=(None,7))for y in range(self.maxheight)]
+        self.rulerX=[FastaTableButton(self,'column',x,{'insert':self.insertrow,'delete':self.deleterow,'show':self.showx,'default':'show'},font=(None,7))for x in range(self.maxwidth)]
         self.loc=Label(self,relief='groove')
-        self.loc.grid(row=0,column=0)
+        self.loc.grid(row=1,column=0)
     def rename(self,x,name=None):
         if name is not None:
             b=[*self.array.index]
@@ -361,8 +389,8 @@ class FastaTable(Table):
     def deleterow(self,y):
         self.array = concat([self.array.iloc[0:y,:], self.array.iloc[y+1:, :]], axis=0).fillna("")
         self.event_generate('<<editvalues>>')
-    def update_table(self,event=None):
-        self.update_size()
+    def update_table(self,event=None,force=False):
+        self.update_size(force=force)
         self.loc.config(text='row:%s column:%s'%(self.Y,self.X))
         indice=[str(i)for i in self.array.index]
         for x in range(self.w):
@@ -377,6 +405,8 @@ class FastaTable(Table):
                 self.Array[x][y].set(self.array.iloc[y+self.Y,x+self.X])
                 self.columnconfigure(x+1, weight=m)
                 self.Array[x][y].label.config(width=m)
+
+
 ####################################whereto ####################################
 class WhereToDialogXY(_QueryDialog):
     def body(self, master):

@@ -93,7 +93,7 @@ class DCombo(Combobox):
         self.trace_add=self.variable.trace_add
         self.set=self.variable.set
         kw['textvariable']=self.variable
-        Combobox.__init__(self,master=self.frame,values=self.values,state='readonly',**kw)
+        Combobox.__init__(self,master=self.frame,values=list(self.values),state='readonly',**kw)
         self.frame.setwidget(self)
     def get(self):
         if self.frame.get():return Combobox.get(self)
@@ -107,9 +107,12 @@ class DCombo(Combobox):
                 except:showerror('Error','Unknown error!');return 0
             else:showerror('Error','You must select a value!');return 0
         else:return 1
-class DCombo2(DCombo):
+class DCombo0(DCombo):
     def get(self):
         if self.frame.get():return self.values.index(Combobox.get(self))
+class DCombo2(DCombo):
+    def get(self):
+        if self.frame.get():return self.values[Combobox.get(self)]
 class Constant(LabelFrame):
     def __init__(self, master=None, title=None, prompt=None, value=None, valid=True, error=None, **kw):
         self.value=value
