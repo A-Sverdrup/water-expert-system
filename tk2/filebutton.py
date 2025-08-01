@@ -48,7 +48,7 @@ class OpenFilesButton(_FileButton): #TODO: fix broken get when multiple files ar
     command=lambda self,**kw:askopenfilenames(**kw)
 class SaveAsFileButton(_FileButton):
     text='Select file to save as'
-    command=lambda self,**kw:askopenfilename(**kw)
+    command=lambda self,**kw:asksaveasfilename(**kw)
 class DirectoryButton(_FileButton):
     text='Select directory'
     command=lambda self,**kw:askdirectory(**kw)
@@ -58,3 +58,4 @@ if __name__=='__main__':
     OpenFilesButton().pack()#TODO: fix unintended get behavior
     SaveAsFileButton().pack()
     a=DirectoryButton(mandatory=True);a.pack()
+    a.mainloop()

@@ -3,7 +3,8 @@ from tkinter.messagebox import showerror
 from tkinter import Checkbutton,Entry,Frame,Label,LabelFrame,Radiobutton,Spinbox,BooleanVar,StringVar,Grid,Pack,Place
 from tkinter.ttk import Combobox
 from tk2 import OmniSpin
-__all__=['CustomDialog','Constant','DBool','DCombo','DCombo2','DSpin','Group','NoneVar','Option','RadioCheck','RadioGroup','askcustom','showlines',
+from strings import STRINGS,LANGUAGE
+__all__=['CustomDialog','Constant','DBool','DCombo0','DCombo','DCombo2','DSpin','Group','NoneVar','Option','RadioCheck','RadioGroup','askcustom','showlines',
          'askio','setio','atleastoneoutput','TaxSpin','TaxSpin2']
 ##################################customdialog##################################
 class RadioCheck(LabelFrame):
@@ -18,6 +19,7 @@ class RadioCheck(LabelFrame):
         self.type=type
         if type=='radio':
             radio=Radiobutton(self,width=0,variable=self.switch,value=self.radiovalue)
+            if default:radio.select()#;print('I am default!')
             self.switch.trace_add('write',self.state)
             radio.bind('<Button-2>',lambda e:radio.deselect())
             radio.bind('<Button-3>',lambda e:radio.deselect())
@@ -27,27 +29,28 @@ class RadioCheck(LabelFrame):
             self.enabled.trace_add('write',self.state)
             Checkbutton(self,width=0,variable=self.enabled).pack(side='left',fill='both',expand=False)
     def get(self):
-        if self.type=='radio':
-            return self.switch.get()==self.radiovalue
-        else:#elif self.type=='check':
-            return self.enabled.get()
+        if self.type=='radio':return self.switch.get()==self.radiovalue
+        else:return self.enabled.get()
     def setwidget(self,widget):
         self.widget=widget
         self.widget.pack(side='left',fill='both',expand='true')
         if self.type=='radio':self.widget.config(state='disabled')
+        elif self.type=='check':self.widget.config(state=('normal'if self.enabled.get()else'disabled'))
         for m in vars(Pack).keys() | vars(Grid).keys() | vars(Place).keys():
             if m[0] != '_' and m != 'config' and m != 'configure':
                 setattr(self.widget, m, getattr(self, m))
     def state(self,*a):
         self.widget.config(state=('normal'if self.get()else'disabled'))
+def DString(self):
+    self.variable=StringVar(self.frame)
+    self.trace_add=self.variable.trace_add
+    self.set=self.variable.set
+    return self.variable
 class DSpin(Spinbox):
     def __init__(self,master=None,text=None,type=None,classtype=int,default=True,cnf={},**kw):
         self.frame=RadioCheck(master,text=text,type=type,variable=kw.pop('radiovariable',None),value=kw.pop('radiovalue',None),default=default)
         if'text'in kw:del kw['text']
-        self.variable=StringVar(self.frame)
-        self.trace_add=self.variable.trace_add
-        self.set=self.variable.set
-        kw['textvariable']=self.variable
+        kw['textvariable']=DString(self)
         self.type=classtype
         Spinbox.__init__(self,self.frame,cnf=cnf,**kw)
         self.frame.setwidget(self)
@@ -57,20 +60,14 @@ class DSpin(Spinbox):
         if'text'in kw:self.frame.config(text=kw['text']);del kw['text']
         Spinbox.config(self,cnf=cnf,**kw)
     def validate(self):
-        try:
-            self.get()
-            return 1
-        except ValueError:return 0
+        try:self.get();return 1
+        except ValueError:showerror(STRINGS.loc['MISC::ERROR',LANGUAGE],STRINGS.loc['DIALOG::VALUE:SET',LANGUAGE]);return 0
 class DEntry(Entry):
     def __init__(self,master=None,text=None,type=None,mandatory=True,default=True,cnf={},**kw):
-        sefl.mandatory=mandatory
+        self.mandatory=mandatory
         self.frame=RadioCheck(master,text=text,type=type,variable=kw.pop('radiovariable',None),value=kw.pop('radiovalue',None),default=default)
         if'text'in kw:del kw['text']
-        self.variable=StringVar(self.frame)
-        self.trace_add=self.variable.trace_add
-        self.set=self.variable.set
-        kw['textvariable']=self.variable
-        self.type=classtype
+        kw['textvariable']=DString(self)
         Entry.__init__(self,self.frame,cnf=cnf,**kw)
         self.frame.setwidget(self)
     def get(self):
@@ -81,7 +78,7 @@ class DEntry(Entry):
     def validate(self):
         if self.mandatory:
             if self.get():return 1
-            else:showerror('Error','You must enter a value!');return 0
+            else:showerror(STRINGS.loc['MISC::ERROR',LANGUAGE],STRINGS.loc['DIALOG::VALUE:ENTER',LANGUAGE]);return 0
         else:return 1
 class DCombo(Combobox):
     def __init__(self,master=None,text=None,type=None,values=[],mandatory=True,default=True,**kw):
@@ -89,23 +86,20 @@ class DCombo(Combobox):
         self.values=values
         self.frame=RadioCheck(master,text=text,type=type,variable=kw.pop('radiovariable',None),value=kw.pop('radiovalue',None),default=default)
         if'text'in kw:del kw['text']
-        self.variable=StringVar(self.frame)
-        self.trace_add=self.variable.trace_add
-        self.set=self.variable.set
-        kw['textvariable']=self.variable
+        kw['textvariable']=DString(self)
         Combobox.__init__(self,master=self.frame,values=list(self.values),state='readonly',**kw)
         self.frame.setwidget(self)
     def get(self):
         if self.frame.get():return Combobox.get(self)
     def config(self,cnf={},**kw):
         if'text'in kw:self.frame.config(text=kw['text']);del kw['text']
-        Spinbox.config(self,cnf=cnf,**kw)
+        Combobox.config(self,cnf=cnf,**kw)
     def validate(self):
         if self.mandatory:
             if self.get():
                 try:self.values.index(Combobox.get(self));return 1
-                except:showerror('Error','Unknown error!');return 0
-            else:showerror('Error','You must select a value!');return 0
+                except:showerror(STRINGS.loc['MISC::ERROR',LANGUAGE],'Unknown error!');return 0
+            else:showerror(STRINGS.loc['MISC::ERROR',LANGUAGE],STRINGS.loc['DIALOG::VALUE:SELECT',LANGUAGE]);return 0
         else:return 1
 class DCombo0(DCombo):
     def get(self):
@@ -122,7 +116,7 @@ class Constant(LabelFrame):
         Label(self,text=prompt,**kw).pack()
     def get(self):return self.value
     def validate(self):
-        if not self.valid:showerror('Error',self.error)
+        if not self.valid:showerror(STRINGS.loc['MISC::ERROR',LANGUAGE],self.error)
         return self.valid
 class Option(Label):
     def __init__(self, master=None, title=None, prompt=None, type=type, value=None, valid=True, error=None, default=True, **kw):
@@ -136,7 +130,7 @@ class Option(Label):
         if self.frame.get():return self.value
     def validate(self):
         if self.frame.get():
-            if not self.valid:showerror('Error',self.error)
+            if not self.valid:showerror(STRINGS.loc['MISC::ERROR',LANGUAGE],self.error)
             return self.valid
         else:return True
 class DBool(Option):
@@ -171,11 +165,11 @@ class Group(Frame):
             if self.validation==any:
                 if any([self.widgets[i].validate()for i in self.widgets])\
                    and any([(self.widgets[i].get()is not None)for i in self.widgets]):return 1
-                elif self.error:showerror('Error',self.error)
+                elif self.error:showerror(STRINGS.loc['MISC::ERROR',LANGUAGE],self.error)
             elif self.validation==all:
                 if all([self.widgets[i].validate()for i in self.widgets])\
                    and all([(self.widgets[i].get()is not None)for i in self.widgets]):return 1
-                elif self.error:showerror('Error',self.error)
+                elif self.error:showerror(STRINGS.loc['MISC::ERROR',LANGUAGE],self.error)
             elif self.validation==None:
                 return True
             else:
@@ -198,7 +192,7 @@ class RadioGroup(Group,Frame):
                 a=self.widgets[self.variable.get()].validate()
                 #print('radio2',a)
                 return a
-            else:showerror('Error','You must select an option!');return 0
+            else:showerror(STRINGS.loc['MISC::ERROR',LANGUAGE],STRINGS.loc['DIALOG::OPTION:SELECT',LANGUAGE]);return 0
         else:return True
 
 class CustomDialog(_QueryDialog):
@@ -242,17 +236,17 @@ def showlines(title=None, prompt=None, values=None, **kw):
     return d.result
 ####################################__init__####################################
 class TaxSpin(Frame):
-    def __init__(self,master=None,type=None,cnf={},maxvalue=10,**kw):
-        self.frame=RadioCheck(master,text='Scientific name',type=type,variable=kw.pop('radiovariable',None),value=kw.pop('radiovalue',None))
+    def __init__(self,master=None,text=None,type=None,maxvalue=10,default=True,cnf={},**kw):
+        self.frame=RadioCheck(master,text=STRINGS.loc['TAXONOMY::SCINAME',LANGUAGE],type=type,variable=kw.pop('radiovariable',None),value=kw.pop('radiovalue',None),default=default)
         Frame.__init__(self,master=self.frame)
         self.sw=BooleanVar(self,False)
         self.col=0
-        self.split=Checkbutton(self,text='Split?',variable=self.sw,height=1)
+        self.split=Checkbutton(self,text=STRINGS.loc['TAXONOMY::SPLIT',LANGUAGE],variable=self.sw,height=1)
         self.split.grid(row=0,column=self.col,sticky='nsew')
         self.sw.trace_add('write',self.showhide)
         self.genus=OmniSpin(self,width=4,cnf={'from':0,'to':maxvalue})
         self.genus.grid(row=1,column=self.col,padx=0,sticky='nsew')
-        self.species=OmniSpin(self,text='Species',width=4,cnf={'from':0,'to':maxvalue})
+        self.species=OmniSpin(self,text=STRINGS.loc['TAXONOMY::SPECIES',LANGUAGE],width=4,cnf={'from':0,'to':maxvalue})
         self.frame.setwidget(self)
     def config(self,**kw):
         if 'state' in kw:
@@ -264,7 +258,7 @@ class TaxSpin(Frame):
     def showhide(self,*a):
         if self.sw.get():
             self.species.grid(row=2,column=self.col,sticky='nsew')
-            self.genus.frame.configure(text='Genus',relief='groove')
+            self.genus.frame.configure(text=STRINGS.loc['TAXONOMY::GENUS',LANGUAGE],relief='groove')
         else:
             self.species.grid_forget()
             self.genus.frame.configure(text='',relief='flat')
@@ -274,8 +268,8 @@ class TaxSpin(Frame):
             else:return(self.genus.get(),)
     def validate(self):return 1
 class TaxSpin2(LabelFrame):
-    def __init__(self,master=None,type=None,maxvalue=10,**kw):
-        self.frame=RadioCheck(master,text='Ranked lineage',type=type,variable=kw.pop('radiovariable',None),value=kw.pop('radiovalue',None))
+    def __init__(self,master=None,text=None,type=None,maxvalue=10,default=True,cnf={},**kw):
+        self.frame=RadioCheck(master,text=STRINGS.loc['TAXONOMY::RANKED',LANGUAGE],type=type,variable=kw.pop('radiovariable',None),value=kw.pop('radiovalue',None),default=default)
         Frame.__init__(self,master=self.frame)
         self.value=0
         self.enabled=maxvalue>=9
@@ -283,7 +277,7 @@ class TaxSpin2(LabelFrame):
             self.spin=OmniSpin(self,width=4,type=str,values=tuple([f'{i}-{i+8}'for i in range(maxvalue-7)]))
             self.spin.grid(row=0,column=0,sticky='nsew')
         else:
-            self.spin=Label(self,text='Not enough columns')
+            self.spin=Label(self,text=STRINGS.loc['DIALOG::NOT_ENOUGH_COLUMNS',LANGUAGE])
             self.spin.pack(fill='both',expand=True)
         self.frame.setwidget(self)
     def link(self,r):
@@ -297,7 +291,7 @@ class TaxSpin2(LabelFrame):
             else:return None
     def validate(self):
         if self.enabled:return 1
-        else:showerror('Error','Not enough columns for ranked lineage!');return 0
+        else:showerror(STRINGS.loc['MISC::ERROR',LANGUAGE],STRINGS.loc['TAXONOMY::NOT_ENOUGH_COLUMNS',LANGUAGE]);return 0
     def config(self,**kw):
         if'state'in kw:self.spin.config(state=kw['state']);del kw['state']
 def askio(title=None, prompt=None, inputs=None, outputs=None, validate=all, **kw):
@@ -306,4 +300,4 @@ def setio(title,widgets,**kw):
     return (Group,[],{'title':title,'widgets':widgets,**kw})
 def atleastoneoutput(io):
     if any([(io[1][i]is not None)for i in io[1]]):return 1
-    else:showerror('Error!','Enable at least one output');return 0
+    else:showerror(STRINGS.loc['MISC::ERROR',LANGUAGE],STRINGS.loc['DIALOG::OUTPUTS',LANGUAGE]);return 0

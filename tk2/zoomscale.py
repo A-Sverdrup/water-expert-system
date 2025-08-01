@@ -12,8 +12,8 @@ class ZoomScale(Scale):
         self.set(default)
         self.command=command
         p='R0lGODlhEAAQAHAAACwAAAAAEAAQAIH///8AAAAAAAAAAAAC'
-        self.images={'minus':PhotoImage(data=p+'FISPqcvtD6Nkodp7Dd52+g+GIlMAADs='),
-                     'plus':PhotoImage(data=p+'H4SPqRax256KEtHKHM6v+Q9m4KhNJXahZ5Wyq9RuSgEAOw==')}
+        self.images={'minus':PhotoImage(master=self,data=p+'FISPqcvtD6Nkodp7Dd52+g+GIlMAADs='),
+                     'plus':PhotoImage(master=self,data=p+'H4SPqRax256KEtHKHM6v+Q9m4KhNJXahZ5Wyq9RuSgEAOw==')}
         side='left'if orient=='horizontal'else'bottom'
         fill='y'if orient=='horizontal'else'x'
         if style=='inline':

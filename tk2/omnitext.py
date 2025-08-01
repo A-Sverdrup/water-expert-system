@@ -8,6 +8,7 @@ overriden by replacing make_menu function in a subclass.
 
 It can also have "Copy" and "Clear" buttons, which are useful when using this for an output log (log_buttons=True).
 It can also have a slider for adjusting font size (minfont=..., maxfont=...)
+It can also be readonly via OmniText(state='readonly') - beware though that the internal state is still 'normal'!
 
 (Options to make the bars disappear automatically when not needed, to move them to the other side of the window
 have not been implemented yet. Undo/Redo has not been implemented either).
@@ -23,10 +24,10 @@ __all__ = ['OmniText']
 from tkinter import Button, LabelFrame, Text, Scrollbar, Pack, Grid, Place
 from tkinter.font import Font
 if __name__ == "__main__" or __name__ == "omnitext":
-    from contextmenu import ContextMenu, COPY
+    from contextmenu import ContextMenu,COPY,SELECT,HOTKEYS
     from zoomscale import ZoomScale
 else:
-    from tk2.contextmenu import ContextMenu, COPY
+    from tk2.contextmenu import ContextMenu,COPY,SELECT,HOTKEYS
     from tk2.zoomscale import ZoomScale
       
 class OmniText(Text,ContextMenu):
@@ -47,8 +48,12 @@ class OmniText(Text,ContextMenu):
                     ZoomScale(self.frame,from_=minfont,to=maxfont,default=default,style='inline',text='Font',command=self.zoomfont).pack(side='top',fill='both',expand=True)
             except AssertionError:
                 raise TypeError('Wrong number of arguments: expected minfont AND maxfont')
+        if 'state' in kw and kw['state']=='readonly':
+            self.readonly=True
+            del kw['state']
+        else:self.readonly=False
         if log_buttons:
-            Button(self.frame,text='Clear',command=lambda:self.delete(0.0,'end')).pack(side='bottom', fill='x')
+            if not self.readonly:Button(self.frame,text='Clear',command=lambda:self.delete(0.0,'end')).pack(side='bottom', fill='x')
             Button(self.frame,text=COPY,command=self.copy).pack(side='bottom', fill='x')
         if scrolling[1]!=0:
             self.vbar = Scrollbar(self.frame)
@@ -61,6 +66,7 @@ class OmniText(Text,ContextMenu):
             self.hbar['command'] = self.xview
             kw.update({'xscrollcommand': self.hbar.set,'wrap':'none'})
         Text.__init__(self, self.frame, **kw)
+        if self.readonly:self.bind('<Key>',self.readonlycheck)
         self.pack(side='left', fill='both', expand=True)
         text_meths = vars(Text).keys()
         methods = vars(Pack).keys() | vars(Grid).keys() | vars(Place).keys()
@@ -68,7 +74,9 @@ class OmniText(Text,ContextMenu):
         for m in methods:
             if m[0] != '_' and m != 'config' and m != 'configure':
                 setattr(self, m, getattr(self.frame, m))
-        ContextMenu.__init__(self)
+        ContextMenu.__init__(self,True,self.readonly)
+    def readonlycheck(self,event):
+        if event.char not in ['\x03','\x01']:return"break"
     def zoomfont(self,size):
         current_font=Font(font=self.cget("font"))
         self.config(font=(current_font.actual("family"), size, current_font.actual("slant"), current_font.actual("weight")))
@@ -78,12 +86,20 @@ class OmniText(Text,ContextMenu):
     def __str__(self):
         return str(self.frame)
     def copy(self):
-        self.event_generate(self.keys[platform][SELECT])
-        self.event_generate(self.keys[platform][COPY])
+        self.clipboard_clear()
+        self.clipboard_append(self.get(1.0,'end'))
 
 if __name__ == "__main__":
-    Otext = OmniText(scrolling=(1,1), bg='white', height=10, log_buttons=True, text='OmniText')
+    from tkinter import Tk
+    root=Tk()
+    Otext = OmniText(root,scrolling=(1,1), bg='white', height=10, log_buttons=True, text='OmniText')
     Otext.insert('end', __doc__)
+    Otext.pack(fill='both', side='left', expand=True)
+    Otext.focus_set()
+    Otext.mainloop()
+    root=Tk()
+    Otext = OmniText(root,scrolling=(1,1), bg='white', height=10, log_buttons=True, text='Read-only OmniText',state='readonly')
+    Otext.insert('end', '''This is a read-only variant. Try editing it and fail!''')
     Otext.pack(fill='both', side='left', expand=True)
     Otext.focus_set()
     Otext.mainloop()

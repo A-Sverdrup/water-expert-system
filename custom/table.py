@@ -1,12 +1,12 @@
 from tkinter import Button,Frame,Label,LabelFrame,Menu,PhotoImage,Scale,Scrollbar,BooleanVar,Pack,Grid,Place
-from tkinter.simpledialog import _QueryDialog
+from tkinter.simpledialog import _QueryDialog,askstring
 from tkinter.messagebox import showinfo
 from pandas import DataFrame,concat
 from math import log,e
 from tk2.entrylabel import EntryLabel
 from tk2.omnispin import OmniSpin
 from tk2.zoomscale import ZoomScale
-__all__=['ops','isnan','isnum','Table','FastaTable','number','whereto']
+__all__=['ops','op_nop','op_unary','op_binary','op_ternary','isnan','isnum','Table','FastaTable','number','whereto']
 ######################################ops ######################################
 NaN=float('nan')
 def feval(f):
@@ -33,8 +33,8 @@ def isnum(a):return int(isinstance(a,(int,float))and(not isnan(a)))
 def isnan(a):return int(str(a)==str(NaN))
 
 #Compare
-EQ=numop(lambda a,b:a==b)
-NE=numop(lambda a,b:a!=b)
+EQ=fcomp(lambda a,b:a==b)
+NE=fcomp(lambda a,b:a!=b)
 LT=numop(lambda a,b:a<b)
 LE=numop(lambda a,b:a<=b)
 GT=numop(lambda a,b:a>b)
@@ -69,6 +69,7 @@ SQRT=unary(lambda a:((a**.5)if a>0 else NaN))
 
 CONCAT=fcomp(lambda a,b:str(a)+str(b))
 CONCAT2=fcomp(lambda a,b:str(a)+' '+str(b))
+PERCENT=lambda a:a/sum(a)
 
 ops={'-------Compare------':None,
      '[I1] = [I2]':EQ,'[I1] ≠ [I2]':NE,'[I1] < [I2]':LT,'[I1] ≤ [I2]':LE,'[I1] > [I2]':GT,'[I1] ≥ [I2]':GE,
@@ -82,14 +83,22 @@ ops={'-------Compare------':None,
      'EXP([I1])':EXP,'LOG2 [I1]':LOG2,'LN [I1]':LOGE,'LOG10 [I1]':LOG10,
      '-----Manipulate-----':None,
      'IF [I1] THEN [I2] ELSE [I3]':lambda a,b,c:DataFrame([i[1]if bool(i[0])else i[2]for i in zip(a,b,c)]),
-     'CONCAT([I1]; [I2])':CONCAT,'CONCAT([I1];" ";[I2])':CONCAT2,
+     'CONCAT([I1]; [I2])':CONCAT,'CONCAT([I1];" ";[I2])':CONCAT2,'[I1] / SUM([I1])':PERCENT
      }
+op_nop=['-------Compare------','--------Logic-------','----Typechecking----','--------Math--------','-----Manipulate-----']
+op_unary=['NOT [I1]','BOOL [I1]','ISERROR([I1])','ISNUMBER([I1])','ISTEXT([I1])','ISEMPTY([I1])','- [I1]','√ [I1]','EXP([I1])','LOG2 [I1]','LN [I1]','LOG10 [I1]','[I1] / SUM([I1])']
+op_binary=['[I1] = [I2]','[I1] ≠ [I2]','[I1] < [I2]','[I1] ≤ [I2]','[I1] > [I2]','[I1] ≥ [I2]','[I1] AND [I2]','[I1] NAND [I2]','[I1] OR [I2]','[I1] NOR [I2]','[I1] XOR [I2]','[I1] XNOR [I2]','[I1] + [I2]','[I1] - [I2]','[I1] * [I2]','[I1] / [I2]','[I1] ^ [I2]','CONCAT([I1]; [I2])','CONCAT([I1];" ";[I2])']
+op_ternary=['IF [I1] THEN [I2] ELSE [I3]']
 #####################################table #####################################
 def number(value):
-    try:
-        try:number2=int(value)
-        except ValueError:number2=float(value)
-    except ValueError:number2=value
+    try:number2=int(value)
+    except ValueError:
+        try:number2=int(value.replace(',','.'))
+        except ValueError:
+            try:number2=float(value)
+            except ValueError:
+                try:number2=float(value.replace(',','.'))
+                except ValueError:number2=value
     return number2
 class TableButton(Button):
     def __init__(self,master,name,number,commands,**kw):
@@ -405,7 +414,6 @@ class FastaTable(Table):
                 self.Array[x][y].set(self.array.iloc[y+self.Y,x+self.X])
                 self.columnconfigure(x+1, weight=m)
                 self.Array[x][y].label.config(width=m)
-
 
 ####################################whereto ####################################
 class WhereToDialogXY(_QueryDialog):

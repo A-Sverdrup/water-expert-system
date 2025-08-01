@@ -20,6 +20,9 @@ COPY='Copy'
 PASTE='Paste'
 DELETE='Delete'
 SELECT='Select all'
+FIND='Find'
+REPLACE='Replace'
+CLEAR='Replace'
 if platform=='darwin':
     MIDDLE_MOUSE_BUTTON='<Button-3>'
     RIGHT_MOUSE_BUTTON='<Button-2>'
@@ -55,7 +58,7 @@ else:
              DELETE:'<KeyPress-Delete>',
              SELECT:'<Control-a>'}
 class ContextMenu():
-    def __init__(self,images=True):
+    def __init__(self,images=True,readonly=False):
         if images:
             try:
                 prefix=b'R0lGODlhEAAQAPcAAAAAAP///w'+b'A'*1015+b'CwAAAAAEAAQAAAI%sADCBxIs'
@@ -70,6 +73,7 @@ class ContextMenu():
                     }
             except RuntimeError:
                 self.images=None
+        self.readonly=readonly
         self.menu=Menu(self,tearoff=0)
         self.bind(RIGHT_MOUSE_BUTTON,self.showmenu)
     
@@ -80,7 +84,8 @@ class ContextMenu():
         self.menu.tk_popup(event.x_root,event.y_root)
     def make_menu(self):
         #for i in [UNDO,REDO,None,CUT,COPY,PASTE,DELETE,None,SELECT]:
-        for i in [CUT,COPY,PASTE,DELETE,None,SELECT]:
+        actions=[COPY,SELECT]if self.readonly else [CUT,COPY,PASTE,DELETE,None,SELECT]
+        for i in actions:
             if i:
                 if self.images:
                     self.menu.add_command(label=i+' '+STRINGS[i], image=self.images[i], compound='left',

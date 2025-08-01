@@ -1,0 +1,202 @@
+	DEBUG	EN	RU	LN
+TITLE	TITLE	GeneProt marker gene/protein metagenomic sequencing data manipulation and ecological assessment expert system	Экспертная система автоматизированной экологической оценки водоемов и управления метагеномными данными GeneProt	
+MISC::ERROR	MISC::ERROR	Error!	Ошибка	
+MISC::EXIT	MISC::EXIT	Exiting...	Выход из программы...	
+MISC::WARNING	MISC::WARNING	Warning!	Предупреждение	
+MISC::FILE_NOT_FOUND	MISC::FILE_NOT_FOUND {}	"File not found:
+{}"	"Файл не найден:
+{}"	
+MISC::PLEASE_WAIT	MISC::PLEASE_WAIT	Please wait...	Пожалуйста, подождите...	
+DIALOG::NOT_ENOUGH_COLUMNS	DIALOG::NOT_ENOUGH_COLUMNS	Not enough columns!	Недостаточно столбцов в таблице!	
+DIALOG::OUTPUTS	DIALOG::OUTPUTS	Enable at least one output!	Выберите хотя бы один результат!	
+DIALOG::OPTION:SELECT	DIALOG::OPTION:SELECT	You must select an option!	Выберите один вариант!	
+DIALOG::VALUE:ENTER	DIALOG::VALUE:ENTER	You must enter a value!	Введите значение!	
+DIALOG::VALUE:SELECT	DIALOG::VALUE:SELECT	You must select a value!	Выберите значение!	
+DIALOG::VALUE:SET	DIALOG::VALUE:SET	You must set a value!	Задайте значение!	
+PRELOAD::GUI	PRELOAD::GUI	Loading GUI...	Загрузка пользовательского интерфейса...	
+PRELOAD::UTIL	PRELOAD::UTIL {} {} {}	"Loading external tools {}/{}:
+Testing for {}"	"Проверка внешних утилит {}/{}:
+{}"	
+PRELOAD::MISSING:PACKAGE_TITLE	PRELOAD::MISSING:PACKAGE_TITLE {}	"Package ""{}"" cannot be loaded!"	"Пакет ""{}"" недоступен!"	
+PRELOAD::MISSING:UTILITY_TITLE	PRELOAD::MISSING:UTILITY_TITLE {}	"External utility ""{}"" cannot be loaded!"	"Внешняя утилита ""{}"" недоступна!"	
+PRELOAD::MISSING:REQUIRED_LIBRARY	PRELOAD::MISSING:REQUIRED_LIBRARY {}	"Required library ({}) is corrupted or missing.
+The program cannot be run.
+
+Please check for missing files and/or reinstall the program"	"Необходимая программная библиотека ({}) повреждена или отсутствует.
+Программа не может быть запущена.
+
+Проверьте, что все файлы целы и/или попробуйте переустановить программу."	
+PRELOAD::MISSING:REQUIRED_PACKAGE	PRELOAD::MISSING:REQUIRED_PACKAGE {}	"Required external package ({}) is corrupted or missing.
+The program cannot be run.
+
+Please check for missing files and/or reinstall the program"	"Необходимая сторонняя программная библиотека ({}) повреждена или отсутствует.
+Программа не может быть запущена.
+
+Проверьте, что все файлы целы и/или попробуйте переустановить программу."	
+PRELOAD::MISSING:PACKAGE	PRELOAD::MISSING:PACKAGE {} {} {}	"An external package ({}) is corrupted, missing or unavailable.
+This package is {}. The program can be run without it, however, {} will be unavailable. Continue loading?',"	"Сторонняя программная библиотека повреждена или отсутствует.
+Эта библиотека необходима для {}. Программа может быть запущена, однако {} будет недоступно. Продолжить загрузку?"	
+PRELOAD::MISSING:UTILITY	PRELOAD::MISSING:UTILITY {} {}	"An external utility ({}) is corrupted, missing or unavailable.
+{}. Continue loading?"	"Внешняя утилита {} недоступна, повреждена или отсутствует.
+{}. Продолжить загрузку?"	
+PRELOAD::MISSING:UTILITY_MESSAGE	PRELOAD::MISSING:UTILITY_MESSAGE {} {}	This utility is required for {}. The program can be run without it, however, this functionality ({}) will be unavailable	Эта библиотека необходима для {}. Программа может быть запущена, однако данный функционал ({}) будет недоступен. Продолжить загрузку?	
+PRELOAD::BLASTN:1	PRELOAD::BLASTN:1	BLAST identification	идентификации BLAST	
+PRELOAD::BLASTN:2	PRELOAD::BLASTN:2	Full run, Identification, Run BLAST	Полный запуск, идентификация, запуск BLAST	
+PRELOAD::MAKEBLASTDB:1	PRELOAD::MAKEBLASTDB:1	BLAST database creation	создания базы данных для BLAST	
+PRELOAD::MAKEBLASTDB:2	PRELOAD::MAKEBLASTDB:2	Create a database	Создать базу данных	
+PRELOAD::SEVENZ:1	PRELOAD::SEVENZ:1	Gb2taxid database full rebuild	полной перестройки БД Gb2taxid	
+PRELOAD::SEVENZ:2	PRELOAD::SEVENZ:2	Rebuild database [Not recommended])	Перестройка базы данных [Не рекомендуется]	
+PLATFORM::win32	PLATFORM::win32	This program was developed on Windows and is a beta-version. Please report found issues to https://github.com/A-Sverdrup/water-expert-system/issues	Эта программа разработана на ОС Windows и является предварительной версией. Пожалуйста, сообщайте об обнаруженных ошибках разработчику: https://github.com/A-Sverdrup/water-expert-system/issues	
+PLATFORM::darwin	PLATFORM::darwin	This program was developed on Windows and was not tested on MacOS. You may encounter previously unknown errors or unintended behaviour. Please report found issues to https://github.com/A-Sverdrup/water-expert-system/issues	Эта программа разработана на ОС Windows и не проходила тестирования на MacOS. В ходе использования программы Вы можете столкнуться с неизвестными проблемами. Пожалуйста, сообщите об обнаруженных ошибках разработчику: https://github.com/A-Sverdrup/water-expert-system/issues	
+PLATFORM::linux	PLATFORM::linux	This program was developed on Windows and was not tested on Linux. You may encounter previously unknown errors or unintended behaviour. Please report found issues to https://github.com/A-Sverdrup/water-expert-system/issues	Эта программа разработана на ОС Windows и не проходила тестирования на ОС Linux. В ходе использования программы Вы можете столкнуться с неизвестными проблемами. Пожалуйста, сообщите об обнаруженных ошибках разработчику: https://github.com/A-Sverdrup/water-expert-system/issues	
+PLATFORM::android	PLATFORM::android	This program cannot be run on Android or ChromeOS.	Эта программа не может быть запущена на ОС Android или ChromeOS.	
+PLATFORM::ios	PLATFORM::ios	This program cannot be run on an iOS or iPadOS device. Use a MacOS device instead	Эта программа не может быть запущена на iOS или iPadOS. Используйте устройство с MacOS для запуска программы.	
+PLATFORM::UNSUPPORTED	PLATFORM::UNSUPPORTED	This platform is not supported. The program cannot be run.	Эта платформа/операционная система не подддерживаеттся. Программа не может быть запущена.	
+PLATFORM::OTHER	PLATFORM::OTHER {}	This program was developed on Windows and was not tested on [{}]. You may encounter previously unknown errors or unintended behaviour. Please report found issues to https://github.com/A-Sverdrup/water-expert-system/issues	Эта программа разработана на ОС Windows и не проходила тестирования на вашей платформе/операционной системе ([{}]). В ходе использования программы Вы можете столкнуться с неизвестными проблемами. Пожалуйста, сообщите об обнаруженных ошибках разработчику: https://github.com/A-Sverdrup/water-expert-system/issues	
+FORMAT::FASTA	FORMAT::FASTA	FASTA	Последовательности FASTA	
+FORMAT::FASTA:NUCL	FORMAT::FASTA:NUCL	Nucleotide FASTA	Нуклеотидные последовательности FASTA	
+FORMAT::FASTA:PROT	FORMAT::FASTA:PROTEIN	Amino acid FASTA	Аминокислотные последовательности FASTA	
+FORMAT::*	FORMAT::*	All files	Все файлы	
+FORMAT::CSV	FORMAT::CSV	CSV table	Таблица CSV	
+FORMAT::ZLIST	FORMAT::ZLIST	Z-List	Z-Список	
+FORMAT::ZINDEX	FORMAT::ZINDEX	Z-List Index	Z-Индекс	
+FORMAT::NJS	FORMAT::NJS	BLAST DB Metadata	Метаданные БД BLAST	
+FORMAT::ZIP	FORMAT::ZIP	Zip archive	Архив ZIP	
+FORMAT::NWK	FORMAT::NWK	Newick tree	Дерево в формате Newick	
+FORMAT::TXT	FORMAT::TXT	Text file	Текстовый файл	
+FORMAT::GZ	FORMAT::GZ	GZ archive	Архив GZ	
+DB::DB	DB::DB	DB	БД	
+DB::PROVIDER	DB::PROVIDER	Database provider	Управление базами данных	
+DB::CREATE	DB::CREATE	Create DB	Создать базу данных	
+DB::MANAGE	DB::MANAGE	Manage DB	Управление БД	
+DB::REBUILD	DB::REBUILD	Rebuild DB	Перестройка базы данных	
+DB::LEGEND	DB::LEGEND	Legend	Легенда	
+DB::LEGEND:UNAVAILABLE	DB::LEGEND:UNAVAILABLE	- Unavailable	- Недоступные части	
+DB::LEGEND:UNSUPPORTED	DB::LEGEND:UNSUPPORTED	- Available, unsupported	- Неподдерживаемые части	
+DB::LEGEND:AVAILABLE	DB::LEGEND:AVAILABLE	- Available, not loaded	- Доступные части	
+DB::LEGEND:LOADED	DB::LEGEND:LOADED	- Available, loaded	- Доступные части (загружены)	
+DB::MANUAL_ADVICE	DB::MANUAL_ADVICE	Click to pre-load files manually	Нажмите, чтобы вручную загрузить части БД в оперативную память	
+DB::GB2TAXID	DB::GB2TAXID	GB2Taxid	GB2Taxid	
+DB::GB2TAXID:CREATED	DB::GB2TAXID:CREATED	Created	Дата создания	
+DB::GB2TAXID:INCORRECT	DB::GB2TAXID:INCORRECT	Incorrect date	Недопустимое значение	
+DB::GB2TAXID:OUTDATED	DB::GB2TAXID:OUTDATED	Out of date	Устаревшая БД	
+DB::GB2TAXID:OUTDATED_MESSAGE	DB::GB2TAXID:OUTDATED_MESSAGE	Your GB2Taxid database is over 6 months old. You should consider rebuilding it.	Ваша БД GB2Taxid была создана более 6 месяцев назад. Возможно, Вам нужно скачать обновление и выполнить перестройку БД.	
+DB::GB2TAXID:UNKNOWN	DB::GB2TAXID:UNKNOWN	Unknown	Неизвестно	
+DB::GB2TAXID:UNDATED	DB::GB2TAXID:UNDATED	No timestamp	Нет даты создания	
+DB::GB2TAXID:UNDATED_MESSAGE	DB::GB2TAXID:UNDATED_MESSAGE	Your GB2Taxid database does not have a timestamp. You will not be notified to update your database when it becomes out of date.	Ваша БД GB2Taxid не содержит даты создания. Вы не сможете получить уведомление, когда Ваша БД станет устаревшей.	
+DB::GB2TAXID:REBUILD	DB::GB2TAXID:REBUILD	Rebuild database [Double-click to confirm]	Перестройка базы данных [Нажмите дважды, чтобы подтвердить]	
+DB::TAXDUMP	DB::TAXDUMP	Taxdump	Taxdump	
+DB::TAXDUMP:ERROR	DB::TAXDUMP:ERROR	There are files missing in the archive. Are you sure you have downloaded new-taxdump.zip and not taxdmp.zip?	В архиве не хватает файлов. Вы уверены, что скачал new-taxdump.zip, а не taxdmp.zip?	
+DB::FASTA	DB::FASTA	FASTA DB	БД FASTA	
+DB::FASTA:MANAGE	DB::FASTA:MANAGE	Manage FASTA	Управление БД	
+DB::FASTA:ADD	DB::FASTA:ADD	Load	Загрузить / Добавить FASTA	
+DB::FASTA:RELOAD	DB::FASTA:RELOAD	Reload	Перезагрузить / Обновить FASTA	
+DB::FASTA:DELETE	DB::FASTA:DELETE	Unload	Выгрузить / Удалить FASTA	
+DB::BLAST	DB::BLAST	BLAST DB	БД BLAST	
+DB::SAPROBITY	DB::SAPROBITY	Saprobity	БД сапробности	
+GUI::LOADSAVE	GUI::LOADSAVE	File	Файл	
+GUI::LOADSAVE:open	GUI::LOADSAVE:open {}	Open {}	Открыть {}	
+GUI::LOADSAVE:load	GUI::LOADSAVE:load {}	Load {}	Загрузить {}	
+GUI::LOADSAVE:save	GUI::LOADSAVE:save {}	Save {}	Сохранить {}	
+GUI::LOADSAVE:unload	GUI::LOADSAVE:unload {}	Unload {}	Выгрузить {}	
+GUI::LOADSAVE:unloadall	GUI::LOADSAVE:unloadall	Unload all	Выгрузить всё	
+GUI::LOADSAVE:close	GUI::LOADSAVE:close {}	Close {}	Закрыть {}	
+GUI::TRANSCEIVER	GUI::TRANSCEIVER	Data	Данные	
+GUI::TRANSCEIVER:receive	GUI::TRANSCEIVER:receive	Receive	Получить	
+GUI::TRANSCEIVER:send	GUI::TRANSCEIVER:send	Send	Отправить	
+GUI::FASTA:NEW	GUI::FASTA:NEW	New FASTA Viewer	Новый предпросмотр FASTA	
+GUI::FASTA:NEW_VISUAL	GUI::FASTA:NEW_VISUAL	New Visual FASTA Viewer	Новый предпросмотр FASTA (графический)	
+GUI::FASTA:TITLE	GUI::FASTA:TITLE	FASTA Preview №%s	Предпросмотр FASTA №%s	
+GUI::FASTA:TITLE_VISUAL	GUI::FASTA:TITLE_VISUAL	Visual FASTA Preview №%s	Предпросмотр FASTA (графический) №%s	
+GUI::DASHBOARD:all	GUI::DASHBOARD:all {}	Total entries: {}	Всего: {}	
+GUI::DASHBOARD:fail	GUI::DASHBOARD:fail {}	Failed: {}	Сбой: {}	
+GUI::DASHBOARD:done	GUI::DASHBOARD:done {}	Done: {}	Готово: {}	
+GUI::DASHBOARD:left	GUI::DASHBOARD:left {}	Remaining: {}	Осталось: {}	
+GUI::DASHBOARD:elapsed	GUI::DASHBOARD:elapsed {}	Elapsed: {}	Время: {}	
+GUI::DASHBOARD:ETA	GUI::DASHBOARD:ETA {}	ETA: {}	Осталось: {}	
+MID::TOOLS	MID::TOOLS	Tools	Инструменты	
+MID::TABLE	MID::TABLE	Manipulate data	Данные	
+MID::TABLE:FUNCTIONS	MID::TABLE:FUNCTIONS	Functions	Формулы	
+MID::TABLE:STATISTICS	MID::TABLE:STATISTICS	Statistics	Статистика	
+MID::TABLE:OPERATE	MID::TABLE:OPERATE	Operate	Операции	
+MID::SEARCH	MID::SEARCH	Search in table	Поиск в таблице	
+MID::SEARCH:ANY	MID::SEARCH:ANY	Any match	Все	
+MID::SEARCH:STRICT	MID::SEARCH:STRICT	Exact match	Точно	
+MID::SEARCH:REGEX	MID::SEARCH:REGEX	Use RegEx	RegEx	
+MID::DEDUP	MID::DEDUP	Deduplicate	Дедупликация	
+MID::DEDUP:READS	MID::DEDUP:READS	Reads	Риды	
+MID::DEDUP:ACCESSIONS	MID::DEDUP:ACCESSIONS	Accessions	ИД Accession	
+MID::DEDUP:TAXIDS	MID::DEDUP:TAXIDS	Taxids	ИД Taxid	
+MID::AUTO	MID::AUTO	Automation	Автоматизация	
+MID::AUTO:FULL	MID::AUTO:FULL	Full run	Полный запуск	
+MID::AUTO:BOOTSTRAP	MID::AUTO:BOOTSTRAP	Bootstrap runs	Повторные выборки	
+MID::AUTO:IDENTIFY	MID::AUTO:IDENTIFY	Identify	Идентификация	
+MID::AUTO:BLAST	MID::AUTO:BLAST	Run BLAST	BLAST	
+MID::AUTO:DEDUP	MID::AUTO:DEDUP	Deduplicate	Дедупликация	
+MID::AUTO:EVALUATE	MID::AUTO:EVALUATE	Evaluate	Экологическая оценка	
+MID::FASTA_TASKS	MID::FASTA_TASKS	FASTA Tasks	Работа с FASTA	
+MID::FASTA_TASKS:RENAME	MID::FASTA_TASKS:RENAME	Rename	Переименовать	
+MID::FASTA_TASKS:MERGE	MID::FASTA_TASKS:MERGE	Merge	Объединить	
+MID::FASTA_TASKS:TABLE	MID::FASTA_TASKS:TABLE	Put into table	В таблицу	
+MID::ONLINE_TASKS	MID::ONLINE_TASKS	Data tasks: NCBI and local DBs	Получение данных из NCBI или локальных БД	
+MID::OFFLINE_TASKS	MID::OFFLINE_TASKS	Data tasks: Local DBs only	Получение данных из локальных БД	
+MID::ONLINE	MID::ONLINE	Online	Онлайн	
+MID::OFFLINE	MID::OFFLINE	Offline	Локально	
+MID::GET:TAXONOMY	MID::GET:TAXONOMY	Get taxonomy data	Получить таксономию	
+MID::GET:SEQUENCES	MID::GET:SEQUENCES	Get sequences	Получить последовательности	
+MID::GET:SAPROBITY	MID::GET:SAPROBITY	Get saprobity data	Получить сапробность	
+MID::STATUS	MID::STATUS	Job status	Прогресс выполнения	
+MID::ESTOP	MID::ESTOP	Emergency STOP	СТОП	
+FASTA::SEARCH	FASTA::SEARCH	Search in FASTA	Поиск в FASTA	
+FASTA::SEARCH:HEADERS	FASTA::SEARCH:HEADERS	Headers	Заголовки	
+FASTA::SEARCH:SEQUENCES	FASTA::SEARCH:SEQUENCES	Sequences	Последовательности	
+FASTA::SEARCH:ANY	FASTA::SEARCH:ANY	Any	Везде	
+IO::SELECT:COLUMNS	IO::SELECT:COLUMNS	Select columns:	Выберите столбцы:	
+IO::SELECT:FILES	IO::SELECT:FILES	Select files:	Выберите файлы:	
+IO::SELECT:INPUTS	IO::SELECT:INPUTS	Select inputs:	Выберите входные данные:	
+IO::OUTPUT:FASTA_TITLE	IO::OUTPUT:FASTA_TITLE	FASTA	Формат FASTA	
+IO::OUTPUT:TEXT	IO::OUTPUT:TEXT	<Text output>	<Текстовые данные>	
+IO::OUTPUT:TEXT_TITLE	IO::OUTPUT:TEXT_TITLE	Text	Текст	
+IO::OUTPUT:TABLE	IO::OUTPUT:TABLE	<Table output>	<Табличные данные>	
+IO::OUTPUT:TABLE_TITLE	IO::OUTPUT:TABLE_TITLE	Table	Таблица	
+IO::LOADED_DATABASE	IO::LOADED_DATABASE	<Loaded database>	<Загруженная БД>	
+IO::LOAD_FIRST	IO::LOAD_FIRST {}	Load {} first!	Загрузите БД {}!	
+IO::INPUTS	IO::INPUTS	Inputs	Входные данные	
+IO::OUTPUTS	IO::OUTPUTS	Outputs	Результаты	
+IO::MISC:AUTO_DETECT	IO::MISC:AUTO_DETECT	<Auto-Detect>	<Определить автоматически>	
+IO::MISC:COUNT	IO::MISC:COUNT	Count	Количество	
+IO::MISC:DATABASE	IO::MISC:DATABASE	Database	База данных	
+IO::MISC:FILTER	IO::MISC:FILTER	Filter	Фильтр	
+IO::BLAST	IO::BLAST	BLAST	BLAST	
+IO::BLAST:AUTO	IO::BLAST:AUTO	BLAST identification	Идентификация BLAST	
+IO::BLAST:BLAST	IO::BLAST:BLAST	BLAST Program	Программа BLAST	
+IO::BLAST:ERROR_READS	IO::BLAST:ERROR_READS	You must specify a FASTA file with raw reads!	Выберите FASTA-файл с ридами!	
+IO::BLAST:ERROR_DATABASE	IO::BLAST:ERROR_DATABASE	You must specify a reference database!	Выберите референсную БД BLAST!	
+IO::BLAST:READS	IO::BLAST:READS	Raw reads (FASTA)	Риды (FASTA)	
+IO::BLAST:DATABASE	IO::BLAST:DATABASE	Reference Database	Референс (БД BLAST)	
+IO::MANIPULATE1:INPUT1	IO::MANIPULATE1:INPUT1	Input I1	Входной параметр I1	
+IO::MANIPULATE1:INPUT2	IO::MANIPULATE1:INPUT2	Input I2	Входной параметр I2	
+IO::MANIPULATE1:INPUT3	IO::MANIPULATE1:INPUT3	Input I3	Входной параметр I3	
+IO::MANIPULATE1:ERROR3	IO::MANIPULATE1:ERROR3	This function requires 3 inputs!	Данная функция требует ровно три параметра!	
+IO::MANIPULATE1:ERROR2	IO::MANIPULATE1:ERROR2	This function requires 2 inputs!	Данная функция требует ровно два параметра!	
+IO::MANIPULATE1:ERROR1	IO::MANIPULATE1:ERROR1	This function requires 1 input!	Данная функция требует ровно один параметр!	
+IO::MANIPULATE1:OPERATOR	IO::MANIPULATE1:OPERATOR	Operator	Функция	
+IO::MANIPULATE2:sum	IO::MANIPULATE2:sum	Sum	Сумма	
+IO::MANIPULATE2:mean	IO::MANIPULATE2:mean	Mean	Среднее	
+IO::MANIPULATE2:min	IO::MANIPULATE2:min	Minimum	Минимум	
+IO::MANIPULATE2:max	IO::MANIPULATE2:max	Maximum	Максимум	
+IO::NCBI:ACCESSION	IO::NCBI:ACCESSION	Accession	ИД Accession	
+IO::NCBI:DATABASE	IO::NCBI:DATABASE	NCBI Database	База данных NCBI	
+IO::NCBI:ERROR_SELECT	IO::NCBI:ERROR_SELECT	Choose (Taxonomy AND Search) OR (Accession AND Download FASTA)	RUS____Choose (Taxonomy AND Search) OR (Accession AND Download FASTA)	
+IO::NCBI:EXISTS	IO::NCBI:EXISTS	Exists	Существует?	
+IO::NCBI:TAXID	IO::NCBI:TAXID	taxid	ИД Taxid	
+IO::DOWNLOAD:REFERENCE	IO::DOWNLOAD:REFERENCE	Reference FASTA	Референс (БД FASTA)	
+IO::TAXONOMY	IO::TAXONOMY	Taxonomy	Таксономия	
+TAXONOMY::SCINAME	TAXONOMY::SCINAME	Scientific name	Название вида	
+TAXONOMY::FULL	TAXONOMY::FULL	Full lineage	Все ранги	
+TAXONOMY::RANKED	TAXONOMY::RANKED	Ranked lineage	Основные ранги	
+TAXONOMY::LINEAGE	TAXONOMY::LINEAGE	Taxonomic lineage	Таксономическая линейка	
+TAXONOMY::GENUS	TAXONOMY::GENUS	Genus	Род	
+TAXONOMY::SPECIES	TAXONOMY::SPECIES	Species	Вид	
+TAXONOMY::SPLIT	TAXONOMY::SPLIT	Split?	Раздельно	
+TAXONOMY::NOT_ENOUGH_COLUMNS	TAXONOMY::NOT_ENOUGH_COLUMNS	Not enough columns for ranked lineage!	В таблице недостаточно столбцов, чтобы проставить основные таксономические ранги!	
