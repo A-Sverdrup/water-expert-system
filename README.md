@@ -5,15 +5,25 @@ Created by Antoniy Elias Sverdrup
 © Anthony&Co. Media Production 2017-2025. All rights reserved.
 
 This is a beta-version of this software.
+
 You may encounter previously unknown errors or unintended behaviour.
+
 Please report found issues to https://github.com/A-Sverdrup/water-expert-system/issues
 
-This program was developed on Windows and was not yet tested on MacOS, Linux or BSD.
+This program was developed and tested on Windows.
 
-Requirements:
+This program has rudimentary MacOS/Linux/BSD support, but was never tested on those systems and may be broken.
+
+
+
+### Requirements:
 
 Python 3.12 or 3.13.
-Python 3.13t is CONFIRMED INCOMPATIBLE.
+
+Python 3.13t is INCOMPATIBLE with pandas.
+
+
+### Dependencies:
 
 ```
 python3 -m pip install numpy
