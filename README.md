@@ -18,9 +18,9 @@ This program has rudimentary MacOS/Linux/BSD support, but was never tested on th
 
 ### Requirements:
 
-Python 3.12 or 3.13.
+non-free-threaded Python version 3.12+.
 
-Python 3.13t is INCOMPATIBLE with pandas.
+Free-threaded versions areincompatible with required dependency ```pandas```.
 
 
 ### Dependencies:
