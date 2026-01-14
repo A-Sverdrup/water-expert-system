@@ -293,7 +293,7 @@ class Middle(Downloader,PanedWindow):
         self.add(self.text)
         
         if not online:
-            Label(status,text='Package "bio" is unavailable!',relief='raised',state='disabled',height=7).grid(row=2,column=0,columnspan=3,sticky='nsew')
+            Label(status,text='Package "bio" is unavailable!',relief='raised',state='disabled',height=7).pack()#fill='both',expand=True)#  .grid(row=2,column=0,columnspan=3,sticky='nsew')
             self.print('Package "bio" is unavailable!')
         else:
             self.controls.append(tax2)
